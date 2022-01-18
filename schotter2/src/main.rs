@@ -1,6 +1,6 @@
 use nannou::{
     color::{PLUM, STEELBLUE},
-    event::Update,
+    event::{Key, Update},
     prelude::PI,
     rand::{prelude::StdRng, random_range, Rng, SeedableRng},
     App, Frame, LoopMode,
@@ -21,6 +21,19 @@ fn main() {
         .run();
 }
 
+fn key_pressed(app: &App, model: &mut Model, key: Key) {
+    match key {
+        Key::R => {
+            model.random_seed = random_range(0, 1000000);
+        }
+        Key::S => {
+            app.main_window()
+                .capture_frame(app.exe_name().unwrap() + ".png");
+        }
+        _other_key => {}
+    }
+}
+
 struct Model {
     random_seed: u64,
 }
@@ -31,6 +44,7 @@ fn model(app: &App) -> Model {
         .title(app.exe_name().unwrap())
         .size(WIDTH, HEIGHT)
         .view(view)
+        .key_pressed(key_pressed)
         .build()
         .unwrap();
     let random_seed = random_range(0, 1000000);
