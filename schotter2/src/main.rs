@@ -54,10 +54,34 @@ fn key_pressed(app: &App, model: &mut Model, key: Key) {
     }
 }
 
+struct Stone {
+    x: f32,
+    y: f32,
+    x_offset: f32,
+    y_offset: f32,
+    rotation: f32,
+}
+
+impl Stone {
+    fn new(x: f32, y: f32) -> Self {
+        let x_offset = 0.0;
+        let y_offset = 0.0;
+        let rotation = 0.0;
+        Stone {
+            x,
+            y,
+            x_offset,
+            y_offset,
+            rotation,
+        }
+    }
+}
+
 struct Model {
     random_seed: u64,
     disp_adj: f32,
     rot_adj: f32,
+    gravel: Vec<Stone>,
 }
 
 fn model(app: &App) -> Model {
@@ -73,15 +97,32 @@ fn model(app: &App) -> Model {
     let random_seed = random_range(0, 1000000);
     let disp_adj = 1.0;
     let rot_adj = 1.0;
-
+    let mut gravel = Vec::new();
+    for y in 0..ROWS {
+        for x in 0..COLS {
+            let stone = Stone::new(x as f32, y as f32);
+            gravel.push(stone);
+        }
+    }
     Model {
         random_seed,
         disp_adj,
         rot_adj,
+        gravel,
     }
 }
 
-fn update(_app: &App, _model: &mut Model, _update: Update) {}
+fn update(_app: &App, model: &mut Model, _update: Update) {
+    let mut rng = StdRng::seed_from_u64(model.random_seed);
+    for stone in &mut model.gravel {
+        let factor = stone.y / ROWS as f32;
+        let disp_factor = factor * model.disp_adj;
+        let rot_factor = factor * model.rot_adj;
+        stone.x_offset = disp_factor * rng.gen_range(-0.5..0.5);
+        stone.y_offset = disp_factor * rng.gen_range(-0.5..0.5);
+        stone.rotation = rot_factor * rng.gen_range(-PI / 4.0..PI / 4.0);
+    }
+}
 
 fn view(app: &App, model: &Model, frame: Frame) {
     let draw = app.draw();
@@ -92,33 +133,16 @@ fn view(app: &App, model: &Model, frame: Frame) {
 
     draw.background().color(PLUM);
 
-    let mut rng = StdRng::seed_from_u64(model.random_seed);
-
-    for y in 0..ROWS {
-        for x in 0..COLS {
-            let cdraw = gdraw.x_y(x as f32, y as f32);
-
-            let factor = y as f32 / ROWS as f32;
-
-            let disp_factor = factor * model.disp_adj;
-            let offset = (
-                disp_factor * rng.gen_range(-0.5..0.5),
-                disp_factor * rng.gen_range(-0.5..0.5),
-            );
-
-            let rot_factor = factor * model.rot_adj;
-            let rotation = rot_factor * rng.gen_range(-PI / 4.0..PI / 4.0);
-
-            cdraw
-                .rect()
-                .no_fill()
-                .stroke(STEELBLUE)
-                .stroke_weight(LINE_WIDTH)
-                .w_h(1.0, 1.0)
-                .x_y(offset.0, offset.1)
-                .rotate(rotation);
-        }
+    for stone in &model.gravel {
+        let cdraw = gdraw.x_y(stone.x, stone.y);
+        cdraw
+            .rect()
+            .no_fill()
+            .stroke(STEELBLUE)
+            .stroke_weight(LINE_WIDTH)
+            .w_h(1.0, 1.0)
+            .x_y(stone.x_offset, stone.y_offset)
+            .rotate(stone.rotation);
     }
-
     draw.to_frame(app, &frame).unwrap();
 }
