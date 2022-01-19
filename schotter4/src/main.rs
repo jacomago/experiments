@@ -1,8 +1,10 @@
+use std::{fs, io::ErrorKind};
+
 use nannou::{
     color::{PLUM, STEELBLUE},
     event::{Key, Update},
     prelude::{WindowId, PI},
-    rand::{random_range, random_f32},
+    rand::{random_f32, random_range},
     App, Frame, LoopMode,
 };
 use nannou_egui::{self, egui, Egui};
@@ -24,6 +26,19 @@ fn main() {
 
 fn key_pressed(app: &App, model: &mut Model, key: Key) {
     match key {
+        Key::R => {
+            if model.recording {
+                model.recording = false;
+            } else {
+                fs::create_dir(&model.frames_dir).unwrap_or_else(|error| {
+                    if error.kind() != ErrorKind::AlreadyExists {
+                        panic! {"Problem creating directory {:?}", model.frames_dir};
+                    }
+                });
+                model.recording = true;
+                model.cur_frame = 0;
+            }
+        }
         Key::S => {
             if let Some(window) = app.window(model.main_window) {
                 window.capture_frame(app.exe_name().unwrap() + ".png")
@@ -80,6 +95,9 @@ struct Model {
     rot_adj: f32,
     motion: f32,
     gravel: Vec<Stone>,
+    frames_dir: String,
+    cur_frame: u32,
+    recording: bool,
 }
 
 fn update_ui(model: &mut Model) {
@@ -137,6 +155,10 @@ fn model(app: &App) -> Model {
 
     let motion = 0.5;
 
+    let frames_dir = app.exe_name().unwrap() + "_frames";
+    let recording = false;
+    let cur_frame = 0;
+
     Model {
         ui,
         main_window,
@@ -144,10 +166,13 @@ fn model(app: &App) -> Model {
         rot_adj,
         motion,
         gravel,
+        frames_dir,
+        cur_frame,
+        recording,
     }
 }
 
-fn update(_app: &App, model: &mut Model, _update: Update) {
+fn update(app: &App, model: &mut Model, _update: Update) {
     update_ui(model);
     for stone in &mut model.gravel {
         if stone.cycles == 0 {
@@ -178,6 +203,18 @@ fn update(_app: &App, model: &mut Model, _update: Update) {
             stone.y_offset += stone.y_velocity;
             stone.rotation += stone.rot_velocity;
             stone.cycles -= 1;
+        }
+    }
+    if model.recording && app.elapsed_frames() % 2 == 0 {
+        model.cur_frame += 1;
+        if model.cur_frame > 9999 {
+            model.recording = false;
+        } else {
+            let filename = format!("{}/schotter{:>04}.png", model.frames_dir, model.cur_frame);
+
+            if let Some(window) = app.window(model.main_window) {
+                window.capture_frame(filename);
+            }
         }
     }
 }
