@@ -89,9 +89,14 @@ fn update_ui(model: &mut Model) {
         .show(&ctx, |ui| {
             ui.add(egui::Slider::new(&mut model.disp_adj, 0.0..=5.0).text("Displacement"));
             ui.add(egui::Slider::new(&mut model.rot_adj, 0.0..=5.0).text("Rotation"));
-            if ui.add(egui::Button::new("Randomize")).clicked() {
-                model.random_seed = random_range(0, 1000000);
-            }
+            ui.horizontal(|ui| {
+                if ui.add(egui::Button::new("Randomize")).clicked() {
+                    model.random_seed = random_range(0, 1000000);
+                }
+                ui.add_space(20.0);
+                ui.add(egui::DragValue::new(&mut model.random_seed));
+                ui.label("Seed");
+            });
         });
 }
 
