@@ -11,12 +11,13 @@ fn main() {
 }
 
 struct Thing {
-    position: Vec2,
+    positions: Vec<Vec2>,
 }
 
 impl Thing {
     pub fn new(p: Vec2) -> Self {
-        Thing { position: p }
+        let positions = vec![p];
+        Thing { positions }
     }
 }
 
@@ -56,17 +57,22 @@ fn model(app: &App) -> Model {
 fn update(_app: &App, model: &mut Model, _update: Update) {
     let sn = 0.01;
     for thing in model.things.iter_mut() {
-        thing.position += vec2(
-            model.noise.get([
-                sn * thing.position.x as f64,
-                sn * thing.position.y as f64,
-                0.0,
-            ]) as f32,
-            model.noise.get([
-                sn * thing.position.x as f64,
-                sn * thing.position.y as f64,
-                1.0,
-            ]) as f32,
+        let last_position = thing.positions[0];
+        thing.positions.insert(
+            0,
+            last_position
+                + vec2(
+                    model.noise.get([
+                        sn * last_position.x as f64,
+                        sn * last_position.y as f64,
+                        0.0,
+                    ]) as f32,
+                    model.noise.get([
+                        sn * last_position.x as f64,
+                        sn * last_position.y as f64,
+                        1.0,
+                    ]) as f32,
+                ),
         )
     }
 }
@@ -82,7 +88,9 @@ fn view(app: &App, model: &Model, frame: Frame) {
         .w_h(SIZE as f32, SIZE as f32)
         .color(srgba(0.0, 0.0, 0.0, 0.1));
     for thing in model.things.iter() {
-        draw.ellipse().xy(thing.position).radius(1.0).color(WHITE);
+        draw.polyline()
+            .points(thing.positions.iter().cloned())
+            .color(WHITE);
     }
 
     draw.to_frame(app, &frame).unwrap();
