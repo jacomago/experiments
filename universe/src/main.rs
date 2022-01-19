@@ -4,7 +4,18 @@ fn main() {
     nannou::app(model).update(update).run();
 }
 
+struct Thing {
+    position: Vec2,
+}
+
+impl Thing {
+    pub fn new(p: Vec2) -> Self {
+        Thing { position: p }
+    }
+}
+
 struct Model {
+    things: Vec<Thing>,
     _window: window::Id,
 }
 
@@ -15,23 +26,25 @@ fn model(app: &App) -> Model {
         .view(view)
         .build()
         .unwrap();
-    Model { _window }
+
+    let mut things = Vec::new();
+    let thing = Thing::new(vec2(0.0, 0.0));
+    things.push(thing);
+
+    Model { things, _window }
 }
 
 fn update(_app: &App, _model: &mut Model, _update: Update) {}
 
-fn view(app: &App, _model: &Model, frame: Frame) {
+fn view(app: &App, model: &Model, frame: Frame) {
     let draw = app.draw();
 
     let time = app.elapsed_frames() as f32 / 60.0;
 
     draw.background().color(BLACK);
 
-    for i in 1..10 {
-        let angle = i as f32 * 0.1 * TAU * time;
-        draw.ellipse()
-            .x_y(100.0 * angle.cos(), 100.0 * angle.sin())
-            .color(WHITE);
+    for thing in model.things.iter() {
+        draw.ellipse().xy(thing.position).radius(5.0).color(WHITE);
     }
 
     draw.to_frame(app, &frame).unwrap();
