@@ -23,10 +23,12 @@ fn update(_app: &App, _model: &mut Model, _update: Update) {}
 fn view(app: &App, _model: &Model, frame: Frame) {
     let draw = app.draw();
 
+    let time = app.elapsed_frames() as f32 / 60.0;
+
     draw.background().color(BLACK);
 
     for i in 1..10 {
-        let angle = i as f32 * 0.1 * TAU;
+        let angle = i as f32 * 0.1 * TAU * time;
         draw.ellipse()
             .x_y(100.0 * angle.cos(), 100.0 * angle.sin())
             .color(WHITE);
