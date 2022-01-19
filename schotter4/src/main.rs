@@ -2,7 +2,7 @@ use nannou::{
     color::{PLUM, STEELBLUE},
     event::{Key, Update},
     prelude::{WindowId, PI},
-    rand::{prelude::StdRng, random_range, Rng, SeedableRng},
+    rand::random_range,
     App, Frame, LoopMode,
 };
 use nannou_egui::{self, egui, Egui};
@@ -22,13 +22,8 @@ fn main() {
         .run();
 }
 
-fn update_seed(model: &mut Model) {
-    model.random_seed = random_range(0, 1000000);
-}
-
 fn key_pressed(app: &App, model: &mut Model, key: Key) {
     match key {
-        Key::R => update_seed(model),
         Key::S => {
             if let Some(window) = app.window(model.main_window) {
                 window.capture_frame(app.exe_name().unwrap() + ".png")
@@ -81,7 +76,6 @@ impl Stone {
 struct Model {
     ui: Egui,
     main_window: WindowId,
-    random_seed: u64,
     disp_adj: f32,
     rot_adj: f32,
     gravel: Vec<Stone>,
@@ -94,14 +88,6 @@ fn update_ui(model: &mut Model) {
         .show(&ctx, |ui| {
             ui.add(egui::Slider::new(&mut model.disp_adj, 0.0..=5.0).text("Displacement"));
             ui.add(egui::Slider::new(&mut model.rot_adj, 0.0..=5.0).text("Rotation"));
-            ui.horizontal(|ui| {
-                if ui.add(egui::Button::new("Randomize")).clicked() {
-                    model.random_seed = random_range(0, 1000000);
-                }
-                ui.add_space(20.0);
-                ui.add(egui::DragValue::new(&mut model.random_seed));
-                ui.label("Seed");
-            });
         });
 }
 
@@ -136,7 +122,6 @@ fn model(app: &App) -> Model {
     let ui_window_ref = app.window(ui_window).unwrap();
     let ui = Egui::from_window(&ui_window_ref);
 
-    let random_seed = random_range(0, 1000000);
     let disp_adj = 1.0;
     let rot_adj = 1.0;
 
@@ -151,7 +136,6 @@ fn model(app: &App) -> Model {
     Model {
         ui,
         main_window,
-        random_seed,
         disp_adj,
         rot_adj,
         gravel,
@@ -160,19 +144,18 @@ fn model(app: &App) -> Model {
 
 fn update(_app: &App, model: &mut Model, _update: Update) {
     update_ui(model);
-    let mut rng = StdRng::seed_from_u64(model.random_seed);
     for stone in &mut model.gravel {
         if stone.cycles == 0 {
             let factor = stone.y / ROWS as f32;
 
             let disp_factor = factor * model.disp_adj;
-            let new_x = disp_factor * rng.gen_range(-0.5..0.5);
-            let new_y = disp_factor * rng.gen_range(-0.5..0.5);
+            let new_x = disp_factor * random_range(-0.5, 0.5);
+            let new_y = disp_factor * random_range(-0.5, 0.5);
 
             let rot_factor = factor * model.rot_adj;
-            let new_rot = rot_factor * rng.gen_range(-PI / 4.0..PI / 4.0);
+            let new_rot = rot_factor * random_range(-PI / 4.0, PI / 4.0);
 
-            let new_cycles = rng.gen_range(50..300);
+            let new_cycles = random_range(50, 300);
 
             stone.x_velocity = (new_x - stone.x_offset) / new_cycles as f32;
             stone.y_velocity = (new_y - stone.y_offset) / new_cycles as f32;
