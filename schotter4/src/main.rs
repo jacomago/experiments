@@ -2,7 +2,7 @@ use nannou::{
     color::{PLUM, STEELBLUE},
     event::{Key, Update},
     prelude::{WindowId, PI},
-    rand::{random_range, random},
+    rand::{random_range, random_f32},
     App, Frame, LoopMode,
 };
 use nannou_egui::{self, egui, Egui};
@@ -78,6 +78,7 @@ struct Model {
     main_window: WindowId,
     disp_adj: f32,
     rot_adj: f32,
+    motion: f32,
     gravel: Vec<Stone>,
 }
 
@@ -88,6 +89,7 @@ fn update_ui(model: &mut Model) {
         .show(&ctx, |ui| {
             ui.add(egui::Slider::new(&mut model.disp_adj, 0.0..=5.0).text("Displacement"));
             ui.add(egui::Slider::new(&mut model.rot_adj, 0.0..=5.0).text("Rotation"));
+            ui.add(egui::Slider::new(&mut model.motion, 0.0..=1.0).text("Motion"));
         });
 }
 
@@ -133,11 +135,14 @@ fn model(app: &App) -> Model {
         }
     }
 
+    let motion = 0.5;
+
     Model {
         ui,
         main_window,
         disp_adj,
         rot_adj,
+        motion,
         gravel,
     }
 }
@@ -146,7 +151,7 @@ fn update(_app: &App, model: &mut Model, _update: Update) {
     update_ui(model);
     for stone in &mut model.gravel {
         if stone.cycles == 0 {
-            if random() {
+            if random_f32() > model.motion {
                 stone.x_velocity = 0.0;
                 stone.y_velocity = 0.0;
                 stone.rot_velocity = 0.0;
