@@ -19,17 +19,25 @@ struct Model {
     _window: window::Id,
 }
 
+const N_THINGS: usize = 2000;
+const SIZE: usize = 1024;
+
 fn model(app: &App) -> Model {
     let _window = app
         .new_window()
-        .size(1024, 1024)
+        .size(SIZE as u32, SIZE as u32)
         .view(view)
         .build()
         .unwrap();
 
     let mut things = Vec::new();
-    let thing = Thing::new(vec2(0.0, 0.0));
-    things.push(thing);
+    for _ in 0..N_THINGS {
+        let thing = Thing::new(vec2(
+            (random::<f32>() - 0.5) * SIZE as f32,
+            (random::<f32>() - 0.5) * SIZE as f32,
+        ));
+        things.push(thing);
+    }
 
     Model { things, _window }
 }
