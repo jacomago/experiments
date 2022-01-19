@@ -4,7 +4,8 @@ members = [
     "tutorials/schotter2",
     "tutorials/schotter3",
     "tutorials/schotter4",
-    "tutorials/universe"
+    "tutorials/universe",
+    "template"
 ]
 
 resolver= "2"
