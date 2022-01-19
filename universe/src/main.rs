@@ -74,10 +74,13 @@ fn update(_app: &App, model: &mut Model, _update: Update) {
 fn view(app: &App, model: &Model, frame: Frame) {
     let draw = app.draw();
 
-    let time = app.elapsed_frames() as f32 / 60.0;
+    // draw ontop of other frames
     if app.elapsed_frames() == 1 {
         draw.background().color(BLACK);
     }
+    draw.rect()
+        .w_h(SIZE as f32, SIZE as f32)
+        .color(srgba(0.0, 0.0, 0.0, 0.1));
     for thing in model.things.iter() {
         draw.ellipse().xy(thing.position).radius(1.0).color(WHITE);
     }
