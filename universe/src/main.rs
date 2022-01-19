@@ -57,23 +57,31 @@ fn model(app: &App) -> Model {
 fn update(_app: &App, model: &mut Model, _update: Update) {
     let sn = 0.01;
     for thing in model.things.iter_mut() {
-        let last_position = thing.positions[0];
-        thing.positions.insert(
-            0,
-            last_position
-                + vec2(
-                    model.noise.get([
-                        sn * last_position.x as f64,
-                        sn * last_position.y as f64,
-                        0.0,
-                    ]) as f32,
-                    model.noise.get([
-                        sn * last_position.x as f64,
-                        sn * last_position.y as f64,
-                        1.0,
-                    ]) as f32,
-                ),
-        )
+        thing.positions.clear();
+        thing.positions.push(vec2(
+            (random::<f32>() - 0.5) * SIZE as f32,
+            (random::<f32>() - 0.5) * SIZE as f32,
+        ));
+
+        for _ in 0..50 {
+            let last_position = thing.positions[0];
+            thing.positions.insert(
+                0,
+                last_position
+                    + vec2(
+                        model.noise.get([
+                            sn * last_position.x as f64,
+                            sn * last_position.y as f64,
+                            0.0,
+                        ]) as f32,
+                        model.noise.get([
+                            sn * last_position.x as f64,
+                            sn * last_position.y as f64,
+                            1.0,
+                        ]) as f32,
+                    ),
+            )
+        }
     }
 }
 
