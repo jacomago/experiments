@@ -87,6 +87,8 @@ fn update_ui(model: &mut Model) {
     egui::Window::new("Schotter Control Panel")
         .collapsible(false)
         .show(&ctx, |ui| {
+            ui.add(egui::Slider::new(&mut model.disp_adj, 0.0..=5.0).text("Displacement"));
+            ui.add(egui::Slider::new(&mut model.rot_adj, 0.0..=5.0).text("Rotation"));
             if ui.add(egui::Button::new("Randomize")).clicked() {
                 model.random_seed = random_range(0, 1000000);
             }
@@ -127,7 +129,7 @@ fn model(app: &App) -> Model {
     let random_seed = random_range(0, 1000000);
     let disp_adj = 1.0;
     let rot_adj = 1.0;
-    
+
     let mut gravel = Vec::new();
     for y in 0..ROWS {
         for x in 0..COLS {
