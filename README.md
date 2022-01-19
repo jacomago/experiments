@@ -1,4 +1,4 @@
-# Experiments in using [Nannou](nannou.cc)
+# Experiments in using [Nannou](https://nannou.cc)
 
 ## Tutorials
 
