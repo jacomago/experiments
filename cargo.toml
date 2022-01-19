@@ -5,7 +5,8 @@ members = [
     "tutorials/schotter3",
     "tutorials/schotter4",
     "tutorials/universe",
-    "template"
+    "template",
+    "d20220119"
 ]
 
 resolver= "2"
