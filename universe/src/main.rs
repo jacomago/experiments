@@ -47,7 +47,7 @@ fn model(app: &App) -> Model {
 
 fn update(_app: &App, model: &mut Model, _update: Update) {
     for thing in model.things.iter_mut() {
-        thing.position += vec2(1.0, 0.0);
+        thing.position += vec2((random::<f32>() - 0.5), (random::<f32>() - 0.5));
     }
 }
 
