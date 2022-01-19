@@ -3,7 +3,8 @@ members = [
     "schotter1",
     "schotter2",
     "schotter3",
-    "schotter4"
+    "schotter4",
+    "universe"
 ]
 
 resolver= "2"
