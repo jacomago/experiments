@@ -1,5 +1,8 @@
 use nannou::prelude::*;
 
+// tutorial from https://www.youtube.com/watch?v=Ml6tpyTyXhM&t=776s
+// @Mactuitui
+
 fn main() {
     nannou::app(model).update(update).run();
 }
@@ -42,7 +45,11 @@ fn model(app: &App) -> Model {
     Model { things, _window }
 }
 
-fn update(_app: &App, _model: &mut Model, _update: Update) {}
+fn update(_app: &App, model: &mut Model, _update: Update) {
+    for thing in model.things.iter_mut() {
+        thing.position += vec2(1.0, 0.0);
+    }
+}
 
 fn view(app: &App, model: &Model, frame: Frame) {
     let draw = app.draw();
