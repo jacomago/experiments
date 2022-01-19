@@ -54,8 +54,9 @@ fn model(app: &App) -> Model {
     }
 }
 
-fn update(_app: &App, model: &mut Model, _update: Update) {
-    let sn = 0.01;
+fn update(app: &App, model: &mut Model, _update: Update) {
+    let time = app.elapsed_frames() as f64 / 120.0;
+    let sn = 0.01 * time.cos() as f64 * 0.005;
     for thing in model.things.iter_mut() {
         thing.positions.clear();
         thing.positions.push(vec2(
