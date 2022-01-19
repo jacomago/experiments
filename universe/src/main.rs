@@ -1,4 +1,7 @@
-use nannou::prelude::*;
+use nannou::{
+    noise::{NoiseFn, Perlin},
+    prelude::*,
+};
 
 // tutorial from https://www.youtube.com/watch?v=Ml6tpyTyXhM&t=776s
 // @Mactuitui
@@ -19,6 +22,7 @@ impl Thing {
 
 struct Model {
     things: Vec<Thing>,
+    noise: Perlin,
     _window: window::Id,
 }
 
@@ -41,13 +45,24 @@ fn model(app: &App) -> Model {
         ));
         things.push(thing);
     }
-
-    Model { things, _window }
+    let noise = Perlin::new();
+    Model {
+        things,
+        noise,
+        _window,
+    }
 }
 
 fn update(_app: &App, model: &mut Model, _update: Update) {
     for thing in model.things.iter_mut() {
-        thing.position += vec2((random::<f32>() - 0.5), (random::<f32>() - 0.5));
+        thing.position += vec2(
+            model
+                .noise
+                .get([thing.position.x as f64, thing.position.y as f64, 0.0]) as f32,
+            model
+                .noise
+                .get([thing.position.x as f64, thing.position.y as f64, 0.0]) as f32,
+        )
     }
 }
 
