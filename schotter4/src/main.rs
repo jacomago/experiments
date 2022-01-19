@@ -2,7 +2,7 @@ use nannou::{
     color::{PLUM, STEELBLUE},
     event::{Key, Update},
     prelude::{WindowId, PI},
-    rand::random_range,
+    rand::{random_range, random},
     App, Frame, LoopMode,
 };
 use nannou_egui::{self, egui, Egui};
@@ -146,21 +146,28 @@ fn update(_app: &App, model: &mut Model, _update: Update) {
     update_ui(model);
     for stone in &mut model.gravel {
         if stone.cycles == 0 {
-            let factor = stone.y / ROWS as f32;
+            if random() {
+                stone.x_velocity = 0.0;
+                stone.y_velocity = 0.0;
+                stone.rot_velocity = 0.0;
+                stone.cycles = random_range(50, 300);
+            } else {
+                let factor = stone.y / ROWS as f32;
 
-            let disp_factor = factor * model.disp_adj;
-            let new_x = disp_factor * random_range(-0.5, 0.5);
-            let new_y = disp_factor * random_range(-0.5, 0.5);
+                let disp_factor = factor * model.disp_adj;
+                let new_x = disp_factor * random_range(-0.5, 0.5);
+                let new_y = disp_factor * random_range(-0.5, 0.5);
 
-            let rot_factor = factor * model.rot_adj;
-            let new_rot = rot_factor * random_range(-PI / 4.0, PI / 4.0);
+                let rot_factor = factor * model.rot_adj;
+                let new_rot = rot_factor * random_range(-PI / 4.0, PI / 4.0);
 
-            let new_cycles = random_range(50, 300);
+                let new_cycles = random_range(50, 300);
 
-            stone.x_velocity = (new_x - stone.x_offset) / new_cycles as f32;
-            stone.y_velocity = (new_y - stone.y_offset) / new_cycles as f32;
-            stone.rot_velocity = (new_rot - stone.rotation) / new_cycles as f32;
-            stone.cycles = new_cycles;
+                stone.x_velocity = (new_x - stone.x_offset) / new_cycles as f32;
+                stone.y_velocity = (new_y - stone.y_offset) / new_cycles as f32;
+                stone.rot_velocity = (new_rot - stone.rotation) / new_cycles as f32;
+                stone.cycles = new_cycles;
+            }
         } else {
             stone.x_offset += stone.x_velocity;
             stone.y_offset += stone.y_velocity;
