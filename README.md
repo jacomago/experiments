@@ -14,6 +14,6 @@ Subtler version from schotter4
 
 ### Universe
 
-Using https://www.youtube.com/watch?v=Ml6tpyTyXhM&t=776s from @Mactuitui
+Using <https://www.youtube.com/watch?v=Ml6tpyTyXhM&t=776s> from @Mactuitui
 
 ![universe](images/universe.png)
