@@ -26,8 +26,8 @@ struct Model {
     _window: window::Id,
 }
 
-const N_THINGS: usize = 2000;
-const SIZE: usize = 1024;
+const N_THINGS: usize = 500;
+const SIZE: usize = 300;
 
 fn model(app: &App) -> Model {
     let _window = app
@@ -54,14 +54,19 @@ fn model(app: &App) -> Model {
 }
 
 fn update(_app: &App, model: &mut Model, _update: Update) {
+    let sn = 0.01;
     for thing in model.things.iter_mut() {
         thing.position += vec2(
-            model
-                .noise
-                .get([thing.position.x as f64, thing.position.y as f64, 0.0]) as f32,
-            model
-                .noise
-                .get([thing.position.x as f64, thing.position.y as f64, 0.0]) as f32,
+            model.noise.get([
+                sn * thing.position.x as f64,
+                sn * thing.position.y as f64,
+                0.0,
+            ]) as f32,
+            model.noise.get([
+                sn * thing.position.x as f64,
+                sn * thing.position.y as f64,
+                1.0,
+            ]) as f32,
         )
     }
 }
@@ -70,11 +75,11 @@ fn view(app: &App, model: &Model, frame: Frame) {
     let draw = app.draw();
 
     let time = app.elapsed_frames() as f32 / 60.0;
-
-    draw.background().color(BLACK);
-
+    if app.elapsed_frames() == 1 {
+        draw.background().color(BLACK);
+    }
     for thing in model.things.iter() {
-        draw.ellipse().xy(thing.position).radius(5.0).color(WHITE);
+        draw.ellipse().xy(thing.position).radius(1.0).color(WHITE);
     }
 
     draw.to_frame(app, &frame).unwrap();
