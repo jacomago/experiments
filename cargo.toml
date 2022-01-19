@@ -1,10 +1,10 @@
 [workspace]
 members = [
-    "schotter1",
-    "schotter2",
-    "schotter3",
-    "schotter4",
-    "universe"
+    "tutorials/schotter1",
+    "tutorials/schotter2",
+    "tutorials/schotter3",
+    "tutorials/schotter4",
+    "tutorials/universe"
 ]
 
 resolver= "2"

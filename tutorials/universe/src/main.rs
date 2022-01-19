@@ -3,8 +3,6 @@ use nannou::{
     prelude::*,
 };
 
-// tutorial from https://www.youtube.com/watch?v=Ml6tpyTyXhM&t=776s
-// @Mactuitui
 
 fn main() {
     nannou::app(model)
