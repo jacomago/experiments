@@ -1,13 +1,16 @@
 [workspace]
 members = [
+    "template",
+    "nature_of_code/vectors",
+    "d20220119"
+]
+
+exclude = [
     "tutorials/schotter1",
     "tutorials/schotter2",
     "tutorials/schotter3",
     "tutorials/schotter4",
     "tutorials/universe",
-    "template",
-    "nature_of_code/vectors",
-    "d20220119"
 ]
 
 resolver= "2"
