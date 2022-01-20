@@ -19,9 +19,11 @@ const SIZE: usize = 500;
 
 fn key_pressed(app: &App, model: &mut Model, key: Key) {
     match key {
-        Key::S => app
-            .main_window()
-            .capture_frame("images/".to_owned() + &app.exe_name().unwrap() + ".png"),
+        Key::S => app.main_window().capture_frame(format!(
+            "{}/images/{app_name}.png",
+            &app.exe_name().unwrap(),
+            app_name = &app.exe_name().unwrap()
+        )),
         Key::Up => model.fields.field += 0.001,
         Key::Down => {
             if model.fields.field > 0.0 {
