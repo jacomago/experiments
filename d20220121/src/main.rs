@@ -89,7 +89,7 @@ impl Ball {
                 init_speed * (random::<f32>() - 0.5),
                 init_speed * (random::<f32>() - 0.5),
             ),
-            color: hsl(wall_bounce.hue(), 0.8, 0.8),
+            color: hsl(wall_bounce.hue(), 0.8, 0.5),
             wall_bounce,
         }
     }
@@ -176,7 +176,13 @@ fn update(app: &App, model: &mut Model, _update: Update) {
 fn view(app: &App, model: &Model, frame: Frame) {
     let draw = app.draw();
 
-    draw.background().color(LIGHTGREY);
+    if app.elapsed_frames() == 1 {
+        draw.background().color(LIGHTGREY);
+    }
+
+    draw.rect()
+        .wh(app.window_rect().wh())
+        .color(srgba(0.0, 0.0, 0.0, 0.1));
 
     for ball in &model.balls {
         ball.draw(&draw, model.fields.radius);
