@@ -76,9 +76,8 @@ fn model(app: &App) -> Model {
         .build()
         .unwrap();
 
-    let mut balls = vec![];
-    for _ in 0..20 {
-        balls.push(Ball {
+    let balls = (0..20)
+        .map(|_| Ball {
             position: pt2(
                 random::<f32>() * app.window_rect().w(),
                 random::<f32>() * app.window_rect().h(),
@@ -87,7 +86,7 @@ fn model(app: &App) -> Model {
             acceleration: vec2(0.0, 0.0),
             top_speed: 3.0,
         })
-    }
+        .collect();
     Model {
         balls,
         fields: Fields { field: 120.0 },
