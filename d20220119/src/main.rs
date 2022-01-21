@@ -79,7 +79,6 @@ fn model(app: &App) -> Model {
 }
 
 fn refresh(model: &mut Model) {
-    
     let mut things = Vec::new();
 
     for _ in 1..N_THINGS {

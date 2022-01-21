@@ -2,7 +2,8 @@
 members = [
     "template",
     "nature_of_code/vectors",
-    "d20220119"
+    "d20220119",
+    "d20220121"
 ]
 
 exclude = [
