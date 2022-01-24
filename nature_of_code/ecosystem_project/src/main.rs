@@ -71,11 +71,12 @@ fn create_species() -> HashMap<SpeciesName, Species> {
         Species::new(
             name,
             5.0,
-            0.5,
+            1.0,
             Some(HashSet::from([
                 SpeciesName::Mosquito,
                 SpeciesName::WaterBoatman,
                 SpeciesName::PondSkater,
+                SpeciesName::Mouse,
             ])),
             Visual {
                 radius: 7.0,
@@ -110,6 +111,7 @@ fn create_species() -> HashMap<SpeciesName, Species> {
                 SpeciesName::Mosquito,
                 SpeciesName::WaterBoatman,
                 SpeciesName::PondSkater,
+                SpeciesName::Mouse,
             ])),
             Visual {
                 radius: 10.0,
@@ -146,7 +148,7 @@ fn create_species() -> HashMap<SpeciesName, Species> {
             0.5,
             None,
             Visual {
-                radius: 1.0,
+                radius: 3.0,
                 color: GREY,
             },
         ),
@@ -207,6 +209,7 @@ fn update(app: &App, model: &mut Model, _update: Update) {
 
         let prey_pos = closet_prey_position(animal.position(), &species_positions, &species.prey);
         animal.update(species, prey_pos);
+        animal.check_edges(&app.window_rect());
     }
 }
 

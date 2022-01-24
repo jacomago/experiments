@@ -48,11 +48,14 @@ impl Species {
     fn new_acceleration(&self, position: Position, closest_pos: Option<Point2>) -> Vec2 {
         match self.name {
             SpeciesName::Frog => {
-                if (position.velocity.length() - self.top_speed).abs() < f32::EPSILON {
+                if position.velocity.length().abs() > 0.0
+                    && (position.acceleration.angle() - position.velocity.angle()).abs()
+                        < f32::EPSILON
+                {
                     return -position.acceleration;
                 }
                 if let Some(closest) = closest_pos {
-                    return (closest - position.position) * self.acceleration_ratio;
+                    return (closest - position.position).normalize() * self.acceleration_ratio;
                 }
                 position.acceleration
             }
@@ -76,7 +79,7 @@ impl Species {
             }
             SpeciesName::Goldfish => {
                 if let Some(closest) = closest_pos {
-                    return (closest - position.position) * self.acceleration_ratio;
+                    return (closest - position.position).normalize() * self.acceleration_ratio;
                 }
                 position.acceleration
             }
@@ -102,6 +105,20 @@ impl Position {
         self.velocity = self.velocity.clamp_length_max(top_speed);
 
         self.position += self.velocity;
+    }
+
+    fn check_edges(&mut self, rect: &Rect) {
+        if self.position.x < rect.left() {
+            self.position.x = rect.right();
+        } else if self.position.x > rect.right() {
+            self.position.x = rect.left()
+        }
+
+        if self.position.y < rect.bottom() {
+            self.position.y = rect.top();
+        } else if self.position.y > rect.top() {
+            self.position.y = rect.bottom()
+        }
     }
 }
 
@@ -150,6 +167,10 @@ impl Animal {
 
     pub fn position(&self) -> Point2 {
         self.position.position
+    }
+
+    pub fn check_edges(&mut self, rect: &Rect) {
+        self.position.check_edges(rect);
     }
 
     pub fn update(&mut self, species: &Species, close_pos: Option<Point2>) {
