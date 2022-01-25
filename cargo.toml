@@ -2,6 +2,7 @@
 members = [
     "nature_of_code/vectors",
     "nature_of_code/force",
+    "nature_of_code/intro",
 ]
 
 exclude = [
