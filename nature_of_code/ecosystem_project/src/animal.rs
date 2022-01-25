@@ -48,7 +48,8 @@ impl Species {
     fn new_acceleration(&self, position: Position, closest_pos: Option<Point2>) -> Vec2 {
         match self.name {
             SpeciesName::Frog => {
-                if position.velocity.length().abs() > 0.0
+                if random()
+                    && position.velocity.length().abs() > 0.0
                     && (position.acceleration.angle() - position.velocity.angle()).abs()
                         < f32::EPSILON
                 {
@@ -69,6 +70,9 @@ impl Species {
                 position.acceleration + random_acceleration(self.acceleration_ratio)
             }
             SpeciesName::PondSkater => {
+                if random() {
+                    return vec2(0.0, 0.0);
+                }
                 if (position.velocity.length() - self.top_speed).abs() < f32::EPSILON {
                     return -self.acceleration_ratio * position.acceleration;
                 }
