@@ -55,7 +55,17 @@ fn model(app: &App) -> Model {
 }
 
 fn update(_app: &App, model: &mut Model, _update: Update) {
-    model.position +=  vec2(random::<f32>() - 0.5, random::<f32>() - 0.5);
+    let rand = random::<f32>();
+    let add = if rand < 0.25 {
+        vec2(1.0, 0.0)
+    } else if rand < 0.5 {
+        vec2(-1.0, 0.0)
+    } else if rand < 0.75 {
+        vec2(0.0, 1.0)
+    } else {
+        vec2(0.0, -1.0)
+    };
+    model.position += add;
 }
 
 fn view(app: &App, model: &Model, frame: Frame) {
