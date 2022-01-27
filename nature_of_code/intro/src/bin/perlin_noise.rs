@@ -4,7 +4,7 @@ use nannou::{
 };
 
 fn main() {
-    nannou::app(model).run();
+    nannou::app(model).loop_mode(LoopMode::wait()).run();
 }
 
 struct Fields {
@@ -60,22 +60,26 @@ fn model(app: &App) -> Model {
 
 fn view(app: &App, model: &Model, frame: Frame) {
     let draw = app.draw();
-
-    draw.background().color(WHITE);
-    let rect = app.window_rect();
-
-    let mut xoff = 0.0;
-    for x in rect.left().floor() as i32..rect.right().floor() as i32 {
-        let mut yoff = 0.0;
-        for y in rect.left().floor() as i32..rect.right().floor() as i32 {
-            let bright = map_range(model.noise.get([yoff, xoff]), -1.0, 1.0, 0.0, 1.0);
-            draw.ellipse()
-                .radius(1.0)
-                .x_y(x as f32, y as f32)
-                .color(hsl(0.5, 0.5, bright as f32));
-            yoff += 0.01;
+    let t = app.elapsed_frames();
+    if t % 10 == 0 {
+        let rect = app.window_rect();
+        draw.background().color(WHITE);
+        let toff = t as f64 * 0.01;
+        let mut xoff = 0.0;
+        let step = 5;
+        for x in (rect.left().floor() as i32..rect.right().floor() as i32).step_by(step) {
+            let mut yoff = 0.0;
+            for y in (rect.left().floor() as i32..rect.right().floor() as i32).step_by(step) {
+                let bright = map_range(model.noise.get([yoff, xoff, toff]), -1.0, 1.0, 0.0, 1.0);
+                let hue = map_range(model.noise.get([xoff, yoff, toff]), -1.0, 1.0, 0.1, 0.2);
+                draw.quad()
+                    .w_h(step as f32, step as f32)
+                    .x_y(x as f32, y as f32)
+                    .color(hsl(hue, 0.5, bright as f32));
+                yoff += 0.05
+            }
+            xoff += 0.05;
         }
-        xoff += 0.1;
     }
 
     draw.to_frame(app, &frame).unwrap();
