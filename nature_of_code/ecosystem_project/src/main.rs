@@ -185,7 +185,7 @@ fn model(app: &App) -> Model {
     let mut animals = Vec::new();
 
     for spec in species.values() {
-        for _ in 0..20 {
+        for _ in 0..200 {
             animals.push(Animal::new(spec.name, random_position(app.window_rect())));
         }
     }
@@ -216,7 +216,13 @@ fn update(app: &App, model: &mut Model, _update: Update) {
 fn view(app: &App, model: &Model, frame: Frame) {
     let draw = app.draw();
 
-    draw.background().color(WHITE);
+    if app.elapsed_frames() == 0 {
+        draw.background().color(WHITE);
+    }
+    draw.rect()
+        .wh(app.window_rect().wh())
+        .color(srgba(1.0, 1.0, 1.0, 0.1));
+
     for animal in &model.animals {
         animal.draw(&draw, model.species[&animal.species].visual);
     }

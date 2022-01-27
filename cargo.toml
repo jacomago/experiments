@@ -3,6 +3,7 @@ members = [
     "nature_of_code/vectors",
     "nature_of_code/force",
     "nature_of_code/intro",
+    "nature_of_code/ecosystem_project",
 ]
 
 exclude = [
@@ -12,7 +13,6 @@ exclude = [
     "tutorials/schotter3",
     "tutorials/schotter4",
     "tutorials/universe",
-    "nature_of_code/ecosystem_project",
     "d20220119",
     "d20220121"
 ]
