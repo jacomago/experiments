@@ -28,6 +28,8 @@ Using <https://www.youtube.com/watch?v=Ml6tpyTyXhM&t=776s> from @Mactuitui
 
 <https://natureofcode.com>
 
+Paint splatter.
 ![paint_splatter](images/paint_splatter.png)
 
+Exosystem Project Streaks
 ![ecosystem_project](images/ecosystem_project/ecosystem_project_steaks.png)
