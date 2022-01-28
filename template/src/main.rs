@@ -7,37 +7,15 @@ fn main() {
         .run();
 }
 
-struct Fields {
-    field: f64,
-}
-
 struct Model {
-    fields: Fields,
+    field_up: f32,
+    field_left: f32,
 }
 
 const SIZE: usize = 500;
 
 fn key_pressed(app: &App, model: &mut Model, key: Key) {
-    match key {
-        Key::S => app.main_window().capture_frame(format!(
-            "{}/images/{app_name}.png",
-            &app.exe_name().unwrap(),
-            app_name = &app.exe_name().unwrap()
-        )),
-        Key::Up => model.fields.field += 0.001,
-        Key::Down => {
-            if model.fields.field > 0.0 {
-                model.fields.field -= 0.001;
-            }
-        }
-        Key::Right => model.fields.field += 1.0,
-        Key::Left => {
-            if model.fields.field > 0.0 {
-                model.fields.field -= 0.1;
-            }
-        }
-        _other_key => {}
-    }
+    interaction::key_pressed(app, &mut model.field_up, &mut model.field_left, key);
 }
 
 fn model(app: &App) -> Model {
@@ -51,7 +29,8 @@ fn model(app: &App) -> Model {
         .unwrap();
 
     Model {
-        fields: Fields { field: 120.0 },
+        field_up: 120.0,
+        field_left: 1.0,
     }
 }
 

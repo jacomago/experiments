@@ -1,9 +1,12 @@
 [workspace]
 members = [
+    "interaction",
+    "template",
     "nature_of_code/vectors",
     "nature_of_code/force",
     "nature_of_code/intro",
     "nature_of_code/ecosystem_project",
+    "generative_design/p1"
 ]
 
 exclude = [
