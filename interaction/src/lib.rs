@@ -3,8 +3,9 @@ use std::path::PathBuf;
 use nannou::prelude::*;
 
 fn frame_path(app: &App) -> PathBuf {
-    app.project_path()
+    app.assets_path()
         .expect("Expected project path")
+        .join("images")
         .join(app.exe_name().unwrap())
         .join(format!("{:03}", app.elapsed_frames()))
         .with_extension("png")
