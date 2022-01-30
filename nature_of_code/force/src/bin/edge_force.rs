@@ -24,7 +24,10 @@ struct Ball {
 impl Ball {
     fn new(mass: f32) -> Self {
         Ball {
-            position: pt2(SIZE as f32 * 0.1 * random::<f32>(), SIZE as f32 * 0.1 * random::<f32>()),
+            position: pt2(
+                SIZE as f32 * 0.1 * random::<f32>(),
+                SIZE as f32 * 0.1 * random::<f32>(),
+            ),
             velocity: vec2(0.0, 0.0),
             acceleration: vec2(0.001, 0.0),
             mass,

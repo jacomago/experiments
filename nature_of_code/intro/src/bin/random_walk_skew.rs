@@ -48,7 +48,7 @@ fn model(app: &App) -> Model {
         .build()
         .unwrap();
 
-    Model { 
+    Model {
         position: vec2(0.0, 0.0),
         fields: Fields { field: 120.0 },
     }

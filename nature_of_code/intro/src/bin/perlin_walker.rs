@@ -99,9 +99,9 @@ impl Walker {
         } else if self.color == RED {
             self.position += (xy - vec2(5.0, 5.0)) * 0.1 * SIZE as f32;
         } else if self.color == BLUE {
-            self.position = SIZE as f32 * (xy - 1.0) *0.5;
+            self.position = SIZE as f32 * (xy - 1.0) * 0.5;
         } else {
-            self.position += xy.x * 0.1* SIZE as f32 * vec2(random(), random());
+            self.position += xy.x * 0.1 * SIZE as f32 * vec2(random(), random());
         }
         self.t += vec2(0.01, 0.01);
     }
