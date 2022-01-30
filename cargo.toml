@@ -6,7 +6,8 @@ members = [
     "nature_of_code/force",
     "nature_of_code/intro",
     "nature_of_code/ecosystem_project",
-    "generative_design/p1"
+    "generative_design/p1",
+    "d20220130"
 ]
 
 exclude = [
