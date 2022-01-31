@@ -28,11 +28,9 @@ struct Ball {
 
 impl Ball {
     fn new(mass: f32, color: Hsla) -> Self {
+        let r = (random::<f32>() - 0.5) * TAU;
         Ball {
-            position: pt2(
-                SIZE as f32 * 0.5 * (random::<f32>() - 0.5),
-                SIZE as f32 * 0.5 * (random::<f32>() - 0.5),
-            ),
+            position: pt2(SIZE as f32 * 0.5 * r.cos(), SIZE as f32 * 0.5 * r.sin()),
             velocity: vec2(0.0, 0.0),
             acceleration: vec2(0.0, 0.0),
             mass,
@@ -79,8 +77,8 @@ impl Ball {
         }
     }
 }
-const SIZE: usize = 500;
-const COUNT: usize = 100;
+const SIZE: usize = 1024;
+const COUNT: usize = 200;
 
 fn key_pressed(app: &App, model: &mut Model, key: Key) {
     interaction::key_pressed(app, &mut model.field_up, &mut model.field_left, key);
@@ -89,6 +87,14 @@ fn key_pressed(app: &App, model: &mut Model, key: Key) {
         Key::E => model.boundary += 0.01,
         _other_key => {}
     }
+}
+
+fn ball_size(x: usize, count: usize) -> f32 {
+    map_range(x, 0, count, 1.0, 6.0)
+}
+
+fn ball_color(x: usize, count: usize, start: f32, step: f32) -> Hsla {
+    hsla(map_range(x, 0, count, start, start + step), 1.0, 0.7, 1.0)
 }
 
 fn model(app: &App) -> Model {
@@ -101,27 +107,18 @@ fn model(app: &App) -> Model {
         .build()
         .unwrap();
 
-    let color_scheme: Vec<Hsla> = (0..COUNT)
-        .map(|x| hsla(map_range(x, 0, COUNT, 0.2, 0.4), 1.0, 0.9, 1.0))
-        .collect();
     let mut balls: Vec<Ball> = (0..COUNT)
-        .map(|x| Ball::new(map_range(x, 0, COUNT, 0.5, 3.0), color_scheme[x]))
+        .map(|x| Ball::new(ball_size(x, COUNT), ball_color(x, COUNT, 0.2, 0.2)))
         .collect();
 
-    let color_scheme: Vec<Hsla> = (0..COUNT)
-        .map(|x| hsla(map_range(x, 0, COUNT, 0.4, 0.6), 1.0, 0.9, 1.0))
-        .collect();
     let mut new_balls: Vec<Ball> = (0..COUNT)
-        .map(|x| Ball::new(map_range(x, 0, COUNT, 0.5, 3.0), color_scheme[x]))
+        .map(|x| Ball::new(ball_size(x, COUNT), ball_color(x, COUNT, 0.4, 0.2)))
         .collect();
 
     balls.append(&mut new_balls);
 
-    let color_scheme: Vec<Hsla> = (0..COUNT)
-        .map(|x| hsla(map_range(x, 0, COUNT, 0.6, 0.8), 1.0, 0.9, 1.0))
-        .collect();
     let mut new_balls: Vec<Ball> = (0..COUNT)
-        .map(|x| Ball::new(map_range(x, 0, COUNT, 0.5, 3.0), color_scheme[x]))
+        .map(|x| Ball::new(ball_size(x, COUNT), ball_color(x, COUNT, 0.6, 0.2)))
         .collect();
 
     balls.append(&mut new_balls);
@@ -154,7 +151,7 @@ fn view(app: &App, model: &Model, frame: Frame) {
     let draw = app.draw();
 
     if app.elapsed_frames() == 0 {
-        draw.background().color(LIGHTGREY);
+        draw.background().color(BLACK);
     }
     draw.rect()
         .wh(app.window_rect().wh())
