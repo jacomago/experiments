@@ -7,7 +7,8 @@ members = [
     "nature_of_code/intro",
     "nature_of_code/ecosystem_project",
     "generative_design/p1",
-    "d20220130"
+    "d20220130",
+    "tutorials/learn-wgpu"
 ]
 
 exclude = [
@@ -18,7 +19,7 @@ exclude = [
     "tutorials/schotter4",
     "tutorials/universe",
     "d20220119",
-    "d20220121"
+    "d20220121",
 ]
 
 resolver= "2"
