@@ -9,7 +9,8 @@ members = [
     "generative_design/p1",
     "d20220130",
     "d20220201",
-    "tutorials/learn-wgpu"
+    "tutorials/learn-wgpu",
+    "fluid/cpu_v1"
 ]
 
 exclude = [
