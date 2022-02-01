@@ -8,6 +8,7 @@ members = [
     "nature_of_code/ecosystem_project",
     "generative_design/p1",
     "d20220130",
+    "d20220201",
     "tutorials/learn-wgpu"
 ]
 
