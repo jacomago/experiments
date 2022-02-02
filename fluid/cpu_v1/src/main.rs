@@ -1,4 +1,5 @@
-use cpu_v1::FluidCube;
+
+use cpu_v1::fluid_object::FluidCube;
 use nannou::prelude::*;
 
 fn main() {
