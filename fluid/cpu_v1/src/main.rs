@@ -1,4 +1,3 @@
-
 use cpu_v1::fluid_object::FluidCube;
 use nannou::prelude::*;
 
@@ -53,14 +52,27 @@ fn model(app: &App) -> Model {
         .unwrap();
 
     let scale = 0.5;
-    let wh = scale * app.window_rect().wh();
-    let field = FluidCube::new(
+    let rect = app.window_rect();
+    let wh = scale * rect.wh();
+
+    let mut field = FluidCube::new(
         (wh.x.floor() as usize, wh.y.floor() as usize),
         0.5,
         1.0,
         1.0,
         4,
     );
+    for x in rect.left().floor() as usize..rect.left().floor() as usize + SIZE / 2 {
+        for y in rect.bottom().floor() as usize..rect.bottom().floor() as usize + SIZE / 2 {
+            let pos = vec2(x as f32, y as f32);
+            if random() {
+            field.add_velocity(pos, vec2(random::<f32>(), random::<f32>()), rect);
+            }
+            if random() {
+            field.add_density(pos, random::<f32>(), rect);
+            }
+        }
+    }
     Model {
         field,
         field_up: 120.0,
