@@ -1,5 +1,10 @@
 [workspace]
 members = [
+    "tutorials/learn-wgpu",
+    "fluid/cpu_v1"
+]
+
+exclude = [
     "interaction",
     "template",
     "nature_of_code/vectors",
@@ -9,11 +14,6 @@ members = [
     "generative_design/p1",
     "d20220130",
     "d20220201",
-    "tutorials/learn-wgpu",
-    "fluid/cpu_v1"
-]
-
-exclude = [
     "template",
     "tutorials/schotter1",
     "tutorials/schotter2",
