@@ -183,10 +183,10 @@ fn project(velocity: &mut Array2<Vec2>, iter: usize) {
 
     for x in 1..(shape[0] - 1) {
         for y in 1..(shape[1] - 1) {
-            velocity[(x, y)] = 0.5
+            velocity[(x, y)] -= 0.5
                 * vec2(
-                    size_recip.x * (p[(x + 1, y)] - p[(x - 1, y)]),
-                    size_recip.y * (p[(x, y + 1)] - p[(x, y - 1)]),
+                    (p[(x + 1, y)] - p[(x - 1, y)]) / size_recip.x,
+                    (p[(x, y + 1)] - p[(x, y - 1)]) / size_recip.y,
                 );
         }
     }

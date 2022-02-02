@@ -20,10 +20,10 @@ pub fn key_pressed(app: &App, up_down: &mut f32, left_right: &mut f32, key: Key)
                 *up_down -= 0.001;
             }
         }
-        Key::Right => *left_right += 1.0,
+        Key::Right => *left_right += 0.001,
         Key::Left => {
             if *left_right > 0.0 {
-                *left_right -= 0.1;
+                *left_right -= 0.001;
             }
         }
         _other_key => {}
