@@ -46,109 +46,6 @@ let pointers = [];
 let splatStack = [];
 pointers.push(new pointerPrototype());
 
-const { gl, ext } = getWebGLContext(canvas);
-
-if (isMobile()) {
-    config.DYE_RESOLUTION = 512;
-}
-if (!ext.supportLinearFiltering) {
-    config.DYE_RESOLUTION = 512;
-    config.SHADING = false;
-    config.BLOOM = false;
-    config.SUNRAYS = false;
-}
-
-startGUI();
-
-function getWebGLContext (canvas) {
-    const params = { alpha: true, depth: false, stencil: false, antialias: false, preserveDrawingBuffer: false };
-
-    let gl = canvas.getContext('webgl2', params);
-    const isWebGL2 = !!gl;
-    if (!isWebGL2)
-        gl = canvas.getContext('webgl', params) || canvas.getContext('experimental-webgl', params);
-
-    let halfFloat;
-    let supportLinearFiltering;
-    if (isWebGL2) {
-        gl.getExtension('EXT_color_buffer_float');
-        supportLinearFiltering = gl.getExtension('OES_texture_float_linear');
-    } else {
-        halfFloat = gl.getExtension('OES_texture_half_float');
-        supportLinearFiltering = gl.getExtension('OES_texture_half_float_linear');
-    }
-
-    gl.clearColor(0.0, 0.0, 0.0, 1.0);
-
-    const halfFloatTexType = isWebGL2 ? gl.HALF_FLOAT : halfFloat.HALF_FLOAT_OES;
-    let formatRGBA;
-    let formatRG;
-    let formatR;
-
-    if (isWebGL2)
-    {
-        formatRGBA = getSupportedFormat(gl, gl.RGBA16F, gl.RGBA, halfFloatTexType);
-        formatRG = getSupportedFormat(gl, gl.RG16F, gl.RG, halfFloatTexType);
-        formatR = getSupportedFormat(gl, gl.R16F, gl.RED, halfFloatTexType);
-    }
-    else
-    {
-        formatRGBA = getSupportedFormat(gl, gl.RGBA, gl.RGBA, halfFloatTexType);
-        formatRG = getSupportedFormat(gl, gl.RGBA, gl.RGBA, halfFloatTexType);
-        formatR = getSupportedFormat(gl, gl.RGBA, gl.RGBA, halfFloatTexType);
-    }
-
-    ga('send', 'event', isWebGL2 ? 'webgl2' : 'webgl', formatRGBA == null ? 'not supported' : 'supported');
-
-    return {
-        gl,
-        ext: {
-            formatRGBA,
-            formatRG,
-            formatR,
-            halfFloatTexType,
-            supportLinearFiltering
-        }
-    };
-}
-
-function getSupportedFormat (gl, internalFormat, format, type)
-{
-    if (!supportRenderTextureFormat(gl, internalFormat, format, type))
-    {
-        switch (internalFormat)
-        {
-            case gl.R16F:
-                return getSupportedFormat(gl, gl.RG16F, gl.RG, type);
-            case gl.RG16F:
-                return getSupportedFormat(gl, gl.RGBA16F, gl.RGBA, type);
-            default:
-                return null;
-        }
-    }
-
-    return {
-        internalFormat,
-        format
-    }
-}
-
-function supportRenderTextureFormat (gl, internalFormat, format, type) {
-    let texture = gl.createTexture();
-    gl.bindTexture(gl.TEXTURE_2D, texture);
-    gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.NEAREST);
-    gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, gl.NEAREST);
-    gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_S, gl.CLAMP_TO_EDGE);
-    gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_T, gl.CLAMP_TO_EDGE);
-    gl.texImage2D(gl.TEXTURE_2D, 0, internalFormat, 4, 4, 0, format, type, null);
-
-    let fbo = gl.createFramebuffer();
-    gl.bindFramebuffer(gl.FRAMEBUFFER, fbo);
-    gl.framebufferTexture2D(gl.FRAMEBUFFER, gl.COLOR_ATTACHMENT0, gl.TEXTURE_2D, texture, 0);
-
-    let status = gl.checkFramebufferStatus(gl.FRAMEBUFFER);
-    return status == gl.FRAMEBUFFER_COMPLETE;
-}
 
 function startGUI () {
     var gui = new dat.GUI({ width: 300 });
@@ -181,66 +78,6 @@ function startGUI () {
     captureFolder.add(config, 'TRANSPARENT').name('transparent');
     captureFolder.add({ fun: captureScreenshot }, 'fun').name('take screenshot');
 
-    let github = gui.add({ fun : () => {
-        window.open('https://github.com/PavelDoGreat/WebGL-Fluid-Simulation');
-        ga('send', 'event', 'link button', 'github');
-    } }, 'fun').name('Github');
-    github.__li.className = 'cr function bigFont';
-    github.__li.style.borderLeft = '3px solid #8C8C8C';
-    let githubIcon = document.createElement('span');
-    github.domElement.parentElement.appendChild(githubIcon);
-    githubIcon.className = 'icon github';
-
-    let twitter = gui.add({ fun : () => {
-        ga('send', 'event', 'link button', 'twitter');
-        window.open('https://twitter.com/PavelDoGreat');
-    } }, 'fun').name('Twitter');
-    twitter.__li.className = 'cr function bigFont';
-    twitter.__li.style.borderLeft = '3px solid #8C8C8C';
-    let twitterIcon = document.createElement('span');
-    twitter.domElement.parentElement.appendChild(twitterIcon);
-    twitterIcon.className = 'icon twitter';
-
-    let discord = gui.add({ fun : () => {
-        ga('send', 'event', 'link button', 'discord');
-        window.open('https://discordapp.com/invite/CeqZDDE');
-    } }, 'fun').name('Discord');
-    discord.__li.className = 'cr function bigFont';
-    discord.__li.style.borderLeft = '3px solid #8C8C8C';
-    let discordIcon = document.createElement('span');
-    discord.domElement.parentElement.appendChild(discordIcon);
-    discordIcon.className = 'icon discord';
-
-    let app = gui.add({ fun : () => {
-        ga('send', 'event', 'link button', 'app');
-        window.open('http://onelink.to/5b58bn');
-    } }, 'fun').name('Check out mobile app');
-    app.__li.className = 'cr function appBigFont';
-    app.__li.style.borderLeft = '3px solid #00FF7F';
-    let appIcon = document.createElement('span');
-    app.domElement.parentElement.appendChild(appIcon);
-    appIcon.className = 'icon app';
-
-    if (isMobile())
-        gui.close();
-}
-
-function isMobile () {
-    return /Mobi|Android/i.test(navigator.userAgent);
-}
-
-function captureScreenshot () {
-    let res = getResolution(config.CAPTURE_RESOLUTION);
-    let target = createFBO(res.width, res.height, ext.formatRGBA.internalFormat, ext.formatRGBA.format, ext.halfFloatTexType, gl.NEAREST);
-    render(target);
-
-    let texture = framebufferToTexture(target);
-    texture = normalizeTexture(texture, target.width, target.height);
-
-    let captureCanvas = textureToCanvas(texture, target.width, target.height);
-    let datauri = captureCanvas.toDataURL();
-    downloadURI('fluid.png', datauri);
-    URL.revokeObjectURL(datauri);
 }
 
 function framebufferToTexture (target) {
@@ -284,14 +121,6 @@ function textureToCanvas (texture, width, height) {
     return captureCanvas;
 }
 
-function downloadURI (filename, uri) {
-    let link = document.createElement('a');
-    link.download = filename;
-    link.href = uri;
-    document.body.appendChild(link);
-    link.click();
-    document.body.removeChild(link);
-}
 
 class Material {
     constructor (vertexShader, fragmentShaderSource) {

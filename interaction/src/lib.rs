@@ -2,7 +2,7 @@ use std::path::PathBuf;
 
 use nannou::prelude::*;
 
-fn frame_path(app: &App) -> PathBuf {
+pub fn frame_path(app: &App) -> PathBuf {
     app.assets_path()
         .expect("Expected project path")
         .join("images")
