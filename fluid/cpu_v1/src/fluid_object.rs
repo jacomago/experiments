@@ -1,5 +1,5 @@
 use nannou::{
-    color::{hsla, Hsla},
+    color::{hsv, Hsv},
     math::Vec2Angle,
     prelude::{vec2, Rect, Vec2},
     Draw,
@@ -10,18 +10,17 @@ use crate::{advect, advect_vec, diffuse, diffuse_vec, fluid_pos, pos_fluid, proj
 
 #[derive(Copy, Clone, Debug)]
 pub struct DensColor {
-    hue: f32,
-    sat: f32,
-    alpha: f32,
+    pub hue: f32,
+    pub sat: f32,
 }
 
 impl DensColor {
-    pub fn new(hue: f32, sat: f32, alpha: f32) -> Self {
-        DensColor { hue, sat, alpha }
+    pub fn new(hue: f32, sat: f32) -> Self {
+        DensColor { hue, sat }
     }
 
-    fn color_map(&self, ratio: f32) -> Hsla {
-        hsla(self.hue, self.sat, ratio.clamp(0.0, 1.0), self.alpha)
+    fn color_map(&self, ratio: f32) -> Hsv {
+        hsv(self.hue, self.sat, ratio.clamp(0.0, 1.0))
     }
 }
 
@@ -91,7 +90,7 @@ impl FluidCube {
         }
     }
 
-    pub fn draw_vel(&self, draw: &Draw, wrect: Rect, line_length: f32, color: Hsla) {
+    pub fn draw_vel(&self, draw: &Draw, wrect: Rect, line_length: f32, color: Hsv) {
         let dim = self.velocity.raw_dim();
 
         for x in 0..dim[0] {

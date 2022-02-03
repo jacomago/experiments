@@ -19,7 +19,7 @@ struct Model {
     settings: Settings,
 }
 
-const SIZE: usize = 500;
+const SIZE: usize = 1000;
 
 fn key_pressed(app: &App, model: &mut Model, key: Key) {
     interaction::key_pressed(
@@ -60,20 +60,22 @@ fn model(app: &App) -> Model {
         .build()
         .unwrap();
 
-    let scale = 0.5;
+    let scale = 0.25;
     let rect = app.window_rect();
 
     let fluid = FluidCube::new(scaled_fluid_cube(scale, rect));
     let dens_opt = DensOpt {
         draw_dens: true,
-        dens_color: DensColor::new(0.5, 0.5, 1.0),
+        dens_color: DensColor::new(0.5, 0.5),
         visc: 0.001,
+        input_amount: 3.0,
     };
     let vel_opt = VelOpt {
         diff: 0.001,
         line_length: 5.0,
-        color: hsla(1.0, 1.0, 1.0, 1.0),
+        color: hsv(1.0, 1.0, 0.5),
         draw_vel: true,
+        input_amount: 5.0,
     };
     let window = app.window(window_id).unwrap();
     let egui = Egui::from_window(&window);
@@ -108,8 +110,7 @@ fn update(app: &App, model: &mut Model, update: Update) {
     egui.set_elapsed_time(update.since_start);
     let ctx = model.egui.begin_frame();
     egui::Window::new("Workshop window").show(&ctx, |ui| {
-        ui.add(egui::Slider::new(&mut settings.dens_opt.visc, 0.0..=1.0).text("dens visc"))
-            .changed();
+        //vels
         ui.add(egui::Slider::new(&mut settings.vel_opt.diff, 0.0..=1.0).text("vel diff"))
             .changed();
         ui.add(
@@ -117,11 +118,31 @@ fn update(app: &App, model: &mut Model, update: Update) {
                 .text("vel line length"),
         )
         .changed();
+        ui.add(egui::Slider::new(&mut settings.vel_opt.input_amount, 0.0..=20.0).text("vel input"))
+            .changed();
+        nannou_egui::edit_color(ui, &mut settings.vel_opt.color);
+
+        //dens
+        ui.add(egui::Slider::new(&mut settings.dens_opt.visc, 0.0..=1.0).text("dens visc"))
+            .changed();
+        ui.add(
+            egui::Slider::new(&mut settings.dens_opt.input_amount, 0.0..=20.0).text("dens input"),
+        )
+        .changed();
+        ui.add(
+            egui::Slider::new(&mut settings.dens_opt.dens_color.hue, 0.0..=1.0).text("dens hue"),
+        )
+        .changed();
+        ui.add(
+            egui::Slider::new(&mut settings.dens_opt.dens_color.sat, 0.0..=1.0).text("dens sat"),
+        )
+        .changed();
+
+        //all
         ui.add(egui::Slider::new(&mut settings.dt, 0.0..=5.0).text("time step"))
             .changed();
         ui.add(egui::Slider::new(&mut settings.iter, 1..=20).text("iter"))
             .changed();
-
         let mut scale_changed = false;
         scale_changed |= ui
             .add(egui::Slider::new(&mut settings.scale, 0.1..=1.0).text("scale"))
@@ -138,7 +159,7 @@ fn update(app: &App, model: &mut Model, update: Update) {
         for j in -1..1 {
             model.fluid.add_density(
                 vec2(pos.x + i as f32, pos.y + j as f32),
-                random::<f32>(),
+                settings.dens_opt.input_amount * random::<f32>(),
                 rect,
             );
         }
@@ -147,7 +168,7 @@ fn update(app: &App, model: &mut Model, update: Update) {
     let angle = random::<f32>();
     model.fluid.add_velocity(
         vec2(pos.x as f32, pos.y as f32),
-        vec2(angle.cos(), angle.sin()),
+        settings.vel_opt.input_amount * vec2(angle.cos(), angle.sin()),
         rect,
     );
 
@@ -163,13 +184,15 @@ struct DensOpt {
     draw_dens: bool,
     dens_color: DensColor,
     visc: f32,
+    input_amount: f32,
 }
 
 struct VelOpt {
     diff: f32,
     draw_vel: bool,
     line_length: f32,
-    color: Hsla,
+    color: Hsv,
+    input_amount: f32,
 }
 
 fn view(app: &App, model: &Model, frame: Frame) {
