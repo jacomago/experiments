@@ -1,8 +1,11 @@
 use nannou::{
+    color::Hsla,
     math::map_range,
     prelude::{vec2, Rect, Vec2},
 };
 use ndarray::{Array2, Dim};
+
+pub type ColorMapFn = fn(f32) -> Hsla;
 
 fn neighbours(pair: (usize, usize)) -> Vec<(usize, usize)> {
     vec![

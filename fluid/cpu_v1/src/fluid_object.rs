@@ -1,4 +1,5 @@
 use nannou::{
+    color::{hsla, Hsla},
     math::Vec2Angle,
     prelude::{vec2, Rect, Vec2},
     Draw,
@@ -7,9 +8,24 @@ use ndarray::Array2;
 
 use crate::{advect, advect_vec, diffuse, diffuse_vec, fluid_pos, pos_fluid, project};
 
+#[derive(Copy, Clone, Debug)]
+pub struct DensColor {
+    hue: f32,
+    sat: f32,
+    alpha: f32,
+}
+
+impl DensColor {
+    pub fn new(hue: f32, sat: f32, alpha: f32) -> Self {
+        DensColor { hue, sat, alpha }
+    }
+
+    fn color_map(&self, ratio: f32) -> Hsla {
+        hsla(self.hue, self.sat, ratio.clamp(0.0, 1.0), self.alpha)
+    }
+}
+
 pub struct FluidCube {
-    dt: f32,
-    iter: usize,
     density: Array2<f32>,
     density_prev: Array2<f32>,
     velocity: Array2<Vec2>,
@@ -17,10 +33,8 @@ pub struct FluidCube {
 }
 
 impl FluidCube {
-    pub fn new(size: (usize, usize), dt: f32, iter: usize) -> Self {
+    pub fn new(size: (usize, usize)) -> Self {
         Self {
-            dt,
-            iter,
             density: Array2::zeros(size),
             density_prev: Array2::zeros(size),
             velocity: Array2::from_elem(size, Vec2::ZERO),
@@ -38,42 +52,30 @@ impl FluidCube {
         self.velocity[(v.0, v.1)] += amount;
     }
 
-    fn dens_step(&mut self, visc: f32) {
-        diffuse(
-            &mut self.density,
-            &self.density_prev,
-            self.iter,
-            self.dt,
-            visc,
-        );
-        let new_density = advect(&self.density, &self.velocity, self.dt);
+    fn dens_step(&mut self, visc: f32, dt: f32, iter: usize) {
+        diffuse(&mut self.density, &self.density_prev, iter, dt, visc);
+        let new_density = advect(&self.density, &self.velocity, dt);
 
         std::mem::swap(&mut self.density_prev, &mut self.density);
         self.density = new_density;
     }
 
-    fn vel_step(&mut self, diff: f32) {
-        diffuse_vec(
-            &mut self.velocity,
-            &self.velocity_prev,
-            self.iter,
-            self.dt,
-            diff,
-        );
-        project(&mut self.velocity, self.iter);
-        let mut new_velocity = advect_vec(&self.velocity_prev, &self.velocity_prev, self.dt);
-        project(&mut new_velocity, self.iter);
+    fn vel_step(&mut self, diff: f32, dt: f32, iter: usize) {
+        diffuse_vec(&mut self.velocity, &self.velocity_prev, iter, dt, diff);
+        project(&mut self.velocity, iter);
+        let mut new_velocity = advect_vec(&self.velocity_prev, &self.velocity_prev, dt);
+        project(&mut new_velocity, iter);
 
         std::mem::swap(&mut self.velocity_prev, &mut self.velocity);
         self.velocity = new_velocity;
     }
 
-    pub fn step(&mut self, diff: f32, visc: f32) {
-        self.vel_step(diff);
-        self.dens_step(visc);
+    pub fn step(&mut self, vel_diff: f32, dens_visc: f32, dt: f32, iter: usize) {
+        self.vel_step(vel_diff, dt, iter);
+        self.dens_step(dens_visc, dt, iter);
     }
 
-    pub fn draw_dens(&self, draw: &Draw, wrect: Rect) {
+    pub fn draw_dens(&self, draw: &Draw, wrect: Rect, density_color: DensColor) {
         let dim = self.density.raw_dim();
         let step = wrect.wh() / vec2(dim[0] as f32, dim[1] as f32);
 
@@ -84,12 +86,12 @@ impl FluidCube {
                 draw.rect()
                     .xy(inc)
                     .wh(step)
-                    .hsl(0.5, 0.7, self.density[(x, y)]);
+                    .color(density_color.color_map(self.density[(x, y)]));
             }
         }
     }
 
-    pub fn draw_vel(&self, draw: &Draw, wrect: Rect) {
+    pub fn draw_vel(&self, draw: &Draw, wrect: Rect, line_length: f32, color: Hsla) {
         let dim = self.velocity.raw_dim();
 
         for x in 0..dim[0] {
@@ -97,8 +99,11 @@ impl FluidCube {
                 let inc = fluid_pos((x, y), wrect, dim);
                 let vec = self.velocity[(x, y)];
                 draw.line()
-                    .points(inc, inc + 5.0 * vec2(vec.angle().cos(), vec.angle().sin()))
-                    .rgb(1.0, 1.0, 1.0);
+                    .points(
+                        inc,
+                        inc + line_length * vec2(vec.angle().cos(), vec.angle().sin()),
+                    )
+                    .color(color);
             }
         }
     }
