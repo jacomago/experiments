@@ -36,6 +36,34 @@ const VERTICES: &[Vertex] = &[
 ];
 
 const INDICES: &[u16] = &[0, 1, 4, 1, 2, 4, 2, 3, 4];
+const VERTICES2: &[Vertex] = &[
+    Vertex {
+        position: [-0.0868241, 0.49240386, 0.0],
+        color: [1.0, 0.0, 0.0],
+    }, // A
+    Vertex {
+        position: [-0.49513406, 0.06958647, 0.0],
+        color: [0.5, 0.0, 0.5],
+    }, // B
+    Vertex {
+        position: [-0.21918549, -0.44939706, 0.0],
+        color: [0.0, 0.0, 1.0],
+    }, // C
+    Vertex {
+        position: [0.35966998, -0.3473291, 0.0],
+        color: [0.0, 0.5, 0.5],
+    }, // D
+    Vertex {
+        position: [0.44147372, 0.2347359, 0.0],
+        color: [0.0, 1.0, 0.0],
+    }, // E
+    Vertex {
+        position: [0.0, 0.0, 0.0],
+        color: [0.5, 0.5, 0.0],
+    }, // E
+];
+
+const INDICES2: &[u16] = &[0, 1, 5, 1, 2, 5, 2, 3, 5, 3, 4, 5, 4, 0, 5];
 
 impl Vertex {
     fn desc<'a>() -> wgpu::VertexBufferLayout<'a> {
@@ -67,9 +95,12 @@ struct State {
     color: wgpu::Color,
     render_pipeline: wgpu::RenderPipeline,
     vertex_buffer: wgpu::Buffer,
-    num_vertices: u32,
     index_buffer: wgpu::Buffer,
     num_indices: u32,
+    vertex2_buffer: wgpu::Buffer,
+    index2_buffer: wgpu::Buffer,
+    num2_indices: u32,
+    toggle: bool,
 }
 
 impl State {
@@ -165,7 +196,6 @@ impl State {
             contents: bytemuck::cast_slice(VERTICES),
             usage: wgpu::BufferUsages::VERTEX,
         });
-        let num_vertices = VERTICES.len() as u32;
 
         let index_buffer = device.create_buffer_init(&wgpu::util::BufferInitDescriptor {
             label: Some("Index Buffer"),
@@ -173,6 +203,18 @@ impl State {
             usage: wgpu::BufferUsages::INDEX,
         });
         let num_indices = INDICES.len() as u32;
+        let vertex2_buffer = device.create_buffer_init(&wgpu::util::BufferInitDescriptor {
+            label: Some("Vertex Buffer"),
+            contents: bytemuck::cast_slice(VERTICES2),
+            usage: wgpu::BufferUsages::VERTEX,
+        });
+
+        let index2_buffer = device.create_buffer_init(&wgpu::util::BufferInitDescriptor {
+            label: Some("Index Buffer"),
+            contents: bytemuck::cast_slice(INDICES2),
+            usage: wgpu::BufferUsages::INDEX,
+        });
+        let num2_indices = INDICES2.len() as u32;
         Self {
             surface,
             device,
@@ -182,9 +224,12 @@ impl State {
             color,
             render_pipeline,
             vertex_buffer,
-            num_vertices,
             index_buffer,
             num_indices,
+            vertex2_buffer,
+            index2_buffer,
+            num2_indices,
+            toggle: true,
         }
     }
 
@@ -248,9 +293,17 @@ impl State {
             });
 
             render_pass.set_pipeline(&self.render_pipeline);
-            render_pass.set_vertex_buffer(0, self.vertex_buffer.slice(..));
-            render_pass.set_index_buffer(self.index_buffer.slice(..), wgpu::IndexFormat::Uint16); // 1.
-            render_pass.draw_indexed(0..self.num_indices, 0, 0..1);
+            if self.toggle {
+                render_pass.set_vertex_buffer(0, self.vertex_buffer.slice(..));
+                render_pass
+                    .set_index_buffer(self.index_buffer.slice(..), wgpu::IndexFormat::Uint16); // 1.
+                render_pass.draw_indexed(0..self.num_indices, 0, 0..1);
+            } else {
+                render_pass.set_vertex_buffer(0, self.vertex2_buffer.slice(..));
+                render_pass
+                    .set_index_buffer(self.index2_buffer.slice(..), wgpu::IndexFormat::Uint16); // 1.
+                render_pass.draw_indexed(0..self.num2_indices, 0, 0..1);
+            }
         }
 
         // submit will accept anything that implements IntoIter
@@ -292,6 +345,15 @@ fn main() {
                         // new_inner_size is &&mut so we have to dereference it twice
                         state.resize(**new_inner_size);
                     }
+                    WindowEvent::KeyboardInput {
+                        input:
+                            KeyboardInput {
+                                state: ElementState::Pressed,
+                                virtual_keycode: Some(VirtualKeyCode::Space),
+                                ..
+                            },
+                        ..
+                    } => state.toggle = !state.toggle,
                     _ => {}
                 }
             }
