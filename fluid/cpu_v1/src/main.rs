@@ -1,26 +1,36 @@
 use cpu_v1::fluid_object::{DensColor, FluidCube};
 use nannou::prelude::*;
+use nannou_egui::{self, egui, Egui};
 
 fn main() {
     nannou::app(model).update(update).run();
 }
 
-struct Model {
+struct Settings {
     scale: f32,
-    fluid: FluidCube,
     dens_opt: DensOpt,
     vel_opt: VelOpt,
     dt: f32,
     iter: usize,
 }
+struct Model {
+    fluid: FluidCube,
+    egui: Egui,
+    settings: Settings,
+}
 
 const SIZE: usize = 500;
 
 fn key_pressed(app: &App, model: &mut Model, key: Key) {
-    interaction::key_pressed(app, &mut model.dens_opt.visc, &mut model.vel_opt.diff, key);
+    interaction::key_pressed(
+        app,
+        &mut model.settings.dens_opt.visc,
+        &mut model.settings.vel_opt.diff,
+        key,
+    );
     match key {
-        Key::D => model.dens_opt.draw_dens = !model.dens_opt.draw_dens,
-        Key::V => model.vel_opt.draw_vel = !model.vel_opt.draw_vel,
+        Key::D => model.settings.dens_opt.draw_dens = !model.settings.dens_opt.draw_dens,
+        Key::V => model.settings.vel_opt.draw_vel = !model.settings.vel_opt.draw_vel,
         _other_key => {}
     }
 }
@@ -30,19 +40,23 @@ fn scaled_fluid_cube(scale: f32, rect: Rect) -> (usize, usize) {
     (wh.x.floor() as usize, wh.y.floor() as usize)
 }
 
+fn regen(scale: f32, rect: Rect) -> FluidCube {
+    FluidCube::new(scaled_fluid_cube(scale, rect))
+}
+
 fn resized(app: &App, model: &mut Model, _vec: Vec2) {
-    let fluid = FluidCube::new(scaled_fluid_cube(model.scale, app.window_rect()));
-    model.fluid = fluid;
+    model.fluid = regen(model.settings.scale, app.window_rect());
 }
 
 fn model(app: &App) -> Model {
-    let _window = app
+    let window_id = app
         .new_window()
         .title(app.exe_name().unwrap())
         .size(SIZE as u32, SIZE as u32)
         .view(view)
         .key_pressed(key_pressed)
         .resized(resized)
+        .raw_event(raw_window_event)
         .build()
         .unwrap();
 
@@ -61,18 +75,63 @@ fn model(app: &App) -> Model {
         color: hsla(1.0, 1.0, 1.0, 1.0),
         draw_vel: true,
     };
-    Model {
+    let window = app.window(window_id).unwrap();
+    let egui = Egui::from_window(&window);
+    let settings = Settings {
         scale,
-        fluid,
-        dens_opt,
         vel_opt,
+        dens_opt,
         dt: 1.0,
         iter: 4,
+    };
+    Model {
+        fluid,
+        egui,
+        settings,
     }
 }
 
-fn update(app: &App, model: &mut Model, _update: Update) {
+fn raw_window_event(_app: &App, model: &mut Model, event: &nannou::winit::event::WindowEvent) {
+    model.egui.handle_raw_event(event);
+}
+
+fn update(app: &App, model: &mut Model, update: Update) {
+    let Model {
+        ref mut egui,
+        ref mut settings,
+        ref mut fluid,
+        ..
+    } = *model;
+
     let rect = app.window_rect();
+
+    egui.set_elapsed_time(update.since_start);
+    let ctx = model.egui.begin_frame();
+    egui::Window::new("Workshop window").show(&ctx, |ui| {
+        ui.add(egui::Slider::new(&mut settings.dens_opt.visc, 0.0..=1.0).text("dens visc"))
+            .changed();
+        ui.add(egui::Slider::new(&mut settings.vel_opt.diff, 0.0..=1.0).text("vel diff"))
+            .changed();
+        ui.add(
+            egui::Slider::new(&mut settings.vel_opt.line_length, 1.0..=20.0)
+                .text("vel line length"),
+        )
+        .changed();
+        ui.add(egui::Slider::new(&mut settings.dt, 0.0..=5.0).text("time step"))
+            .changed();
+        ui.add(egui::Slider::new(&mut settings.iter, 1..=20).text("iter"))
+            .changed();
+
+        let mut scale_changed = false;
+        scale_changed |= ui
+            .add(egui::Slider::new(&mut settings.scale, 0.1..=1.0).text("scale"))
+            .changed();
+        scale_changed |= ui.button("Generate").clicked();
+        if scale_changed {
+            *fluid = regen(settings.scale, rect);
+        }
+    });
+
     let pos = rect.xy();
 
     for i in -1..1 {
@@ -93,10 +152,10 @@ fn update(app: &App, model: &mut Model, _update: Update) {
     );
 
     model.fluid.step(
-        model.vel_opt.diff,
-        model.dens_opt.visc,
-        model.dt,
-        model.iter,
+        model.settings.vel_opt.diff,
+        model.settings.dens_opt.visc,
+        model.settings.dt,
+        model.settings.iter,
     );
 }
 
@@ -118,20 +177,22 @@ fn view(app: &App, model: &Model, frame: Frame) {
 
     draw.background().color(BLACK);
 
-    if model.dens_opt.draw_dens {
+    if model.settings.dens_opt.draw_dens {
         model
             .fluid
-            .draw_dens(&draw, app.window_rect(), model.dens_opt.dens_color);
+            .draw_dens(&draw, app.window_rect(), model.settings.dens_opt.dens_color);
     }
 
-    if model.vel_opt.draw_vel {
+    if model.settings.vel_opt.draw_vel {
         model.fluid.draw_vel(
             &draw,
             app.window_rect(),
-            model.vel_opt.line_length,
-            model.vel_opt.color,
+            model.settings.vel_opt.line_length,
+            model.settings.vel_opt.color,
         );
     }
 
     draw.to_frame(app, &frame).unwrap();
+
+    let _draw_to_frame = model.egui.draw_to_frame(&frame);
 }
