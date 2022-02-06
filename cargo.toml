@@ -1,7 +1,8 @@
 [workspace]
 members = [
     "tutorials/learn-wgpu",
-    "fluid/cpu_v1"
+    "fluid/cpu_v1",
+    "d20220204"
 ]
 
 exclude = [
