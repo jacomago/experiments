@@ -1,7 +1,6 @@
 use nannou::{
-    geom::Polygon,
     prelude::*,
-    rand::{self, Rng},
+    rand::{self, prelude::ThreadRng, Rng},
 };
 
 fn main() {
@@ -12,20 +11,28 @@ fn main() {
 }
 
 struct Thing {
-    poly: Polygon<std::vec::IntoIter<Vec2>>,
+    poly: Vec<Vec2>,
     points: Vec<Point2>,
+    angle: f32,
+    color: Hsla,
+    number_of_sides: usize,
+    radius: f32,
+}
+
+fn corner(i: usize, radius: f32, number_of_sides: usize) -> Vec2 {
+    let fract = i as f32 / number_of_sides as f32;
+    let radian = TAU * fract;
+    let x = radian.sin() * radius;
+    let y = radian.cos() * radius;
+    pt2(x, y)
 }
 
 fn poly_points(number_of_sides: usize, radius: f32) -> Vec<Vec2> {
-    (0..number_of_sides)
-        .map(|i| {
-            let fract = i as f32 / number_of_sides as f32;
-            let radian = TAU * fract;
-            let x = radian.sin() * radius;
-            let y = radian.cos() * radius;
-            pt2(x, y)
-        })
-        .collect()
+    let mut poly: Vec<Vec2> = (0..number_of_sides)
+        .map(|i| corner(i, radius, number_of_sides))
+        .collect();
+    poly.push(corner(0, radius, number_of_sides));
+    poly
 }
 
 fn gen_line_points(step: f32, poly: &[Vec2]) -> Vec<Vec2> {
@@ -54,48 +61,81 @@ fn gen_line_points(step: f32, poly: &[Vec2]) -> Vec<Vec2> {
 }
 
 impl Thing {
-    fn new(radius: f32, number_of_sides: usize, step: f32) -> Self {
+    fn new(radius: f32, number_of_sides: usize, step: f32, angle: f32, color: Hsla) -> Self {
         let poly = poly_points(number_of_sides, radius);
         let points = gen_line_points(step, &poly);
         Thing {
-            poly: Polygon::new(poly),
+            poly,
             points,
+            angle,
+            color,
+            number_of_sides,
+            radius,
         }
     }
 
-    fn draw(&self, draw: &Draw, angle: f32) {
+    fn set_angle(&mut self, new_angle: f32) {
+        self.angle = new_angle;
+    }
+
+    fn update(&mut self, radius: f32, step: f32) {
+        self.poly = poly_points(self.number_of_sides, radius);
+        self.points = gen_line_points(step, &self.poly);
+        self.radius = radius;
+    }
+
+    fn draw(&self, draw: &Draw) {
         draw.polyline()
-            .points(self.poly.points.clone())
             .join_round()
-            .rotate(angle)
-            .color(WHITE);
+            .points(self.poly.clone())
+            .rotate(self.angle)
+            .color(self.color);
         draw.polyline()
+            .join_round()
             .points(self.points.clone())
-            .rotate(angle)
-            .color(WHITE);
+            .rotate(self.angle)
+            .color(self.color);
     }
 }
 
-struct Model {
-    thing: Thing,
-    number_of_sides: usize,
+struct Settings {
     radius: f32,
-    step: f32,
-    angle: f32,
-    side_change: usize,
+    side_change: u64,
+    min_sides: usize,
     max_sides: usize,
-    field_up: f32,
+    step: f32,
+    layer: u64
+}
+struct Model {
+    things: Vec<Thing>,
+    settings: Settings,
+    cache_rand: ThreadRng,
 }
 
-impl Model {
-    fn update(&mut self) {
-        self.thing = Thing::new(self.radius, self.number_of_sides, self.step);
-    }
-}
 const SIZE: usize = 500;
 
 fn key_pressed(app: &App, model: &mut Model, key: Key) {
-    interaction::key_pressed(app, &mut model.field_up, &mut model.step, key);
+    interaction::key_pressed(
+        app,
+        &mut model.settings.radius,
+        &mut model.settings.step,
+        key,
+    );
+}
+
+fn new_things(radius: f32, step: f32, min_sides: usize, max_sides: usize) -> Vec<Thing> {
+    let rand_angle = random::<f32>();
+    (min_sides..max_sides)
+        .map(|x| {
+            Thing::new(
+                radius,
+                x,
+                step,
+                TAU * rand_angle * x as f32 % TAU,
+                hsla(map_range(x, min_sides, max_sides, 0.1, 0.9), 0.6, 0.6, 0.8),
+            )
+        })
+        .collect()
 }
 
 fn model(app: &App) -> Model {
@@ -108,36 +148,56 @@ fn model(app: &App) -> Model {
         .build()
         .unwrap();
 
-    let number_of_sides = 4;
     let step = 0.1;
     let radius = SIZE as f32 / 2.5;
-    let angle = 0.0;
-
-    Model {
-        thing: Thing::new(radius, number_of_sides, step),
+    let settings = Settings {
         radius,
-        number_of_sides,
-        step,
-        angle,
         side_change: 20,
-        max_sides: 10,
-        field_up: 0.1,
+        min_sides: 3,
+        max_sides: 7,
+        step,
+        layer: 10
+    };
+
+    let things = new_things(
+        settings.radius,
+        settings.step,
+        settings.min_sides,
+        settings.max_sides,
+    );
+    Model {
+        things,
+        settings,
+        cache_rand: rand::thread_rng(),
     }
 }
 
 fn update(app: &App, model: &mut Model, _update: Update) {
-    model.angle += model.field_up;
-    if app.elapsed_frames() % model.side_change as u64 == 0 {
-        model.number_of_sides = rand::thread_rng().gen_range(4..model.max_sides);
-        model.update();
+    let Model {
+        ref mut settings,
+        ref mut things,
+        ref mut cache_rand,
+    } = *model;
+    for thing in things {
+        thing.set_angle(thing.angle + TAU * cache_rand.gen_range(0.0..0.05));
+        if app.elapsed_frames() % settings.side_change == 0 {
+            thing.update(
+                thing.radius + cache_rand.gen_range(-10.0..10.0),
+                1.0 / cache_rand.gen_range(4..20) as f32,
+            );
+        }
     }
 }
 
 fn view(app: &App, model: &Model, frame: Frame) {
     let draw = app.draw();
 
-    draw.background().color(BLACK);
-    model.thing.draw(&draw, model.angle);
+    if app.elapsed_frames() % model.settings.layer == 0 {
+        draw.background().color(BLACK);
+    }
+    for thing in &model.things {
+        thing.draw(&draw);
+    }
 
     draw.to_frame(app, &frame).unwrap();
 }
