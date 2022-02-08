@@ -27,10 +27,12 @@ pub struct Flock {
     boids: Vec<Boid>,
     settings: FlockSettings,
     color: Hsv,
+    disp_radius: f32,
+    stroke_weight: f32,
 }
 
 impl Flock {
-    pub fn new(name: String, color: Hsv) -> Self {
+    pub fn new(name: String, color: Hsv, disp_radius: f32, stroke_weight: f32, top_speed:f32) -> Self {
         let boids = (0..100)
             .map(|_x| Boid::new(100.0 * vec2(random::<f32>() - 0.5, random::<f32>() - 0.5)))
             .collect();
@@ -44,10 +46,12 @@ impl Flock {
                     seperation: 0.5,
                 },
                 radius: 40.0,
-                top_speed: 10.0,
+                top_speed,
                 max_acc: 0.2,
             },
             color,
+            disp_radius,
+            stroke_weight,
         }
     }
 
@@ -65,6 +69,10 @@ impl Flock {
         ui.add(egui::Label::new(&self.name));
 
         nannou_egui::edit_color(ui, &mut self.color);
+        ui.add(egui::Slider::new(&mut self.disp_radius, 2.0..=10.0).text("dips radius"))
+            .changed();
+        ui.add(egui::Slider::new(&mut self.stroke_weight, 0.5..=4.0).text("stroke weight"))
+            .changed();
         ui.add(egui::Slider::new(&mut self.settings.ratios.align, 0.0..=1.0).text("align"))
             .changed();
         ui.add(egui::Slider::new(&mut self.settings.ratios.cohesion, 0.0..=1.0).text("cohesion"))
@@ -81,7 +89,7 @@ impl Flock {
 
     pub fn draw(&self, draw: &Draw) {
         for boid in &self.boids {
-            boid.draw(draw, self.color);
+            boid.draw(draw, self.color, self.disp_radius, self.stroke_weight);
         }
     }
 }

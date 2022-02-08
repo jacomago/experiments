@@ -66,9 +66,9 @@ fn model(app: &App) -> Model {
     let egui = Egui::from_window(&ui_window_ref);
 
     let flocks = vec![
-        Flock::new("Seagulls".to_string(), hsv(1.0, 1.0, 1.0)),
-        Flock::new("Crows".to_string(), hsv(1.0, 0.8, 0.8)),
-        Flock::new("Sparrows".to_string(), hsv(0.8, 0.5, 1.0)),
+        Flock::new("Seagulls".to_string(), hsv(1.0, 0.1, 1.0), 10.0, 3.0, 5.0),
+        Flock::new("Crows".to_string(), hsv(0.4, 0.8, 1.0), 7.0, 3.0, 5.0),
+        Flock::new("Sparrows".to_string(), hsv(0.8, 0.5, 1.0), 4.0, 2.0, 10.0),
     ];
 
     Model {

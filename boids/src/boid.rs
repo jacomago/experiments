@@ -1,5 +1,10 @@
-
-use nannou::{color::{Hsv},  prelude::{Vec2, vec2, Rect}, rand::random, Draw};
+use nannou::{
+    color::Hsv,
+    math::{Vec2Angle, Vec2Rotate},
+    prelude::{vec2, Rect, Vec2, TAU},
+    rand::random,
+    Draw,
+};
 
 use crate::flock::FlockSettings;
 
@@ -118,8 +123,20 @@ impl Boid {
         self.acceleration = Vec2::ZERO;
     }
 
-    pub fn draw(&self, draw: &Draw, color: Hsv) {
-        draw.ellipse().radius(2.0).xy(self.position).color(color);
+    pub fn draw(&self, draw: &Draw, color: Hsv, radius: f32, stroke_weight: f32) {
+        let theta = self.velocity.angle();
+
+        let v = radius * vec2(1.0, 1.0).normalize().rotate(theta + TAU / 2.0);
+
+        let head_point = self.position + v;
+        let left_point = self.position - v + v.rotate(TAU / 4.0);
+        let right_point = self.position - v + v.rotate(-TAU / 4.0);
+
+        draw.tri()
+            .points(head_point, left_point, right_point)
+            .no_fill()
+            .stroke(color)
+            .stroke_weight(stroke_weight);
     }
 
     pub fn check_edges(&mut self, rect: &Rect) {
