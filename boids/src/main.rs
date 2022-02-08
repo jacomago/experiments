@@ -6,7 +6,6 @@ use nannou::{
 
 use nannou_egui::{self, egui, Egui};
 
-// TODO: Better visuals
 // TODO: SpatialSplit calc
 
 // TODO: 3D???
