@@ -20,7 +20,10 @@ Copy of a piece by Georg Nees
 
 Subtler version from schotter4
 
-![schotter4](assets/images/schotter2.png)
+![schotter4](assets/images/schotter4.png)
+
+Gif:
+![schottergif](assets/images/schotter.gif)
 
 ### Universe
 

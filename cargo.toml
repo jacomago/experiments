@@ -3,7 +3,8 @@ members = [
     "tutorials/learn-wgpu",
     "fluid/cpu_v1",
     "d20220204",
-    "boids"
+    "boids",
+    "video_capture"
 ]
 
 exclude = [
