@@ -4,7 +4,8 @@ members = [
     "fluid/cpu_v1",
     "d20220204",
     "boids",
-    "video_capture"
+    "video_capture",
+    "schotter5"
 ]
 
 exclude = [
