@@ -1,4 +1,4 @@
-use std::{fs, io::ErrorKind};
+use std::{fs, io::ErrorKind, path::PathBuf};
 
 use nannou::{
     noise::{NoiseFn, Perlin},
@@ -68,7 +68,6 @@ struct StoneNoise {
     x: NoiseLoop<f32>,
     y: NoiseLoop<f32>,
     rot: NoiseLoop<f32>,
-    cycles: NoiseLoop<f32>,
     motion: NoiseLoop<f32>,
 }
 
@@ -78,10 +77,6 @@ struct Stone {
     x_offset: f32,
     y_offset: f32,
     rotation: f32,
-    x_velocity: f32,
-    y_velocity: f32,
-    rot_velocity: f32,
-    cycles: u32,
     noise: StoneNoise,
 }
 
@@ -90,8 +85,7 @@ impl Stone {
         let noise = StoneNoise {
             x: NoiseLoop::new(diameter, -0.5, 0.5),
             y: NoiseLoop::new(diameter, -0.5, 0.5),
-            rot: NoiseLoop::new(diameter, -PI / 4.0, PI / 4.0),
-            cycles: NoiseLoop::new(diameter, 50.0, 300.0),
+            rot: NoiseLoop::new(diameter, -PI / 2.0, PI / 2.0),
             motion: NoiseLoop::new(diameter, 0.0, 1.0),
         };
         Stone {
@@ -100,10 +94,6 @@ impl Stone {
             x_offset: 0.0,
             y_offset: 0.0,
             rotation: 0.0,
-            x_velocity: 0.0,
-            y_velocity: 0.0,
-            rot_velocity: 0.0,
-            cycles: 0,
             noise,
         }
     }
@@ -117,7 +107,7 @@ struct Model {
     motion: f32,
     time_factor: f32,
     gravel: Vec<Stone>,
-    frames_dir: String,
+    frames_dir: PathBuf,
     cur_frame: u32,
     noise: Perlin,
     recording: bool,
@@ -131,7 +121,7 @@ fn update_ui(model: &mut Model) {
             ui.add(egui::Slider::new(&mut model.disp_adj, 0.0..=5.0).text("Displacement"));
             ui.add(egui::Slider::new(&mut model.rot_adj, 0.0..=5.0).text("Rotation"));
             ui.add(egui::Slider::new(&mut model.motion, 0.0..=1.0).text("Motion"));
-            ui.add(egui::Slider::new(&mut model.time_factor, 0.0..=100.0).text("Time Factor"));
+            ui.add(egui::Slider::new(&mut model.time_factor, 0.0..=0.01).text("Time Factor"));
         });
 }
 
@@ -179,8 +169,14 @@ fn model(app: &App) -> Model {
     }
 
     let motion = 0.5;
-    let time_factor = 0.1;
-    let frames_dir = app.exe_name().unwrap() + "_frames";
+    let time_factor = 0.01;
+    let frames_dir = app
+        .assets_path()
+        .expect("Expected project path")
+        .join("images")
+        .join("gif")
+        .join("output")
+        .join(app.exe_name().unwrap());
     let recording = false;
     let cur_frame = 0;
 
@@ -223,7 +219,7 @@ impl<T: NumCast + Copy> NoiseLoop<T> {
 
     fn value(&self, a: f32, noise: Perlin) -> T {
         let x = map_range(a.cos(), -1.0, 1.0, self.seed.0, self.seed.0 + self.diameter);
-        let y = map_range(a.cos(), -1.0, 1.0, self.seed.0, self.seed.0 + self.diameter);
+        let y = map_range(a.sin(), -1.0, 1.0, self.seed.1, self.seed.1 + self.diameter);
         let r = noise.get([x, y, 0.0]);
         map_range(r, 0.0, 1.0, self.min, self.max)
     }
@@ -233,46 +229,30 @@ fn update(app: &App, model: &mut Model, _update: Update) {
     update_ui(model);
 
     let t = app.elapsed_frames();
-    let tf = model.time_factor * t as f32;
+    let tf = TAU * model.time_factor * t as f32;
 
     for stone in &mut model.gravel {
-        if stone.cycles == 0 {
-            if stone.noise.motion.value(tf, model.noise) > model.motion {
-                stone.x_velocity = 0.0;
-                stone.y_velocity = 0.0;
-                stone.rot_velocity = 0.0;
-                stone.cycles = stone.noise.cycles.value(tf, model.noise).floor() as u32;
-            } else {
-                let factor = stone.y / ROWS as f32;
+        if stone.noise.motion.value(tf, model.noise) < model.motion {
+            let factor = stone.y / ROWS as f32;
+            let disp_factor = factor * model.disp_adj;
 
-                let disp_factor = factor * model.disp_adj;
-                let new_x = disp_factor * stone.noise.x.value(tf, model.noise);
-                let new_y = disp_factor * stone.noise.y.value(tf, model.noise);
+            stone.x_offset = disp_factor * stone.noise.x.value(tf, model.noise);
+            stone.y_offset = disp_factor * stone.noise.y.value(tf, model.noise);
 
-                let rot_factor = factor * model.rot_adj;
-                let new_rot = rot_factor * stone.noise.rot.value(tf, model.noise);
-
-                let new_cycles = stone.noise.cycles.value(tf, model.noise).floor() as u32;
-
-                stone.x_velocity = (new_x - stone.x_offset) / new_cycles as f32;
-                stone.y_velocity = (new_y - stone.y_offset) / new_cycles as f32;
-                stone.rot_velocity = (new_rot - stone.rotation) / new_cycles as f32;
-                stone.cycles = new_cycles;
-            }
-        } else {
-            stone.x_offset += stone.x_velocity;
-            stone.y_offset += stone.y_velocity;
-            stone.rotation += stone.rot_velocity;
-            stone.cycles -= 1;
+            let rot_factor = factor * model.rot_adj;
+            stone.rotation = rot_factor * stone.noise.rot.value(tf, model.noise);
         }
     }
 
-    if model.recording && t % 2 == 0 {
+    if model.recording {
         model.cur_frame += 1;
-        if model.cur_frame > 9999 {
+        if model.cur_frame as f32 > (1.0 / model.time_factor) {
             model.recording = false;
         } else {
-            let filename = format!("{}/schotter{:>04}.png", model.frames_dir, model.cur_frame);
+            let filename = model
+                .frames_dir
+                .join(format!("schotter{:>04}", model.cur_frame))
+                .with_extension("png");
 
             if let Some(window) = app.window(model.main_window) {
                 window.capture_frame(filename);
