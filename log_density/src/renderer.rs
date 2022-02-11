@@ -34,10 +34,11 @@ impl LinearRenderer {
             .max()
             .unwrap()
             .unwrap() as f32;
+        let mx = (mx + 1.0).ln();
         for (x, row) in self.hits.iter().enumerate() {
             for (y, col) in row.iter().enumerate() {
                 let pixel = if *col > 0 {
-                    let alpha = (*col as f32 / mx).pow(gamma);
+                    let alpha = ((*col as f32 + 1.0).ln() / mx).pow(gamma);
                     let grad = Gradient::new(vec![back.into_linear(), fore.into_linear()]);
                     let new_c = Srgba::from_linear(grad.get(alpha));
                     image::Rgba([

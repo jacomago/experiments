@@ -110,7 +110,8 @@ fn model(app: &App) -> Model {
 
     let mut blob = Blob::new(wrect.w() as usize, wrect.h() as usize, rng, noise);
     blob.gen(rate, noise_scale, perlin_factor, scale);
-    blob.renderer.render(srgba(0.1, 0.0,0.0,1.0), srgba(1.0,1.0,1.0,1.0), 1.0 / 2.2);
+    blob.renderer
+        .render(srgba(0.1, 0.0, 0.0, 1.0), srgba(1.0, 1.0, 1.0, 1.0), 2.0);
 
     Model {
         blob,
