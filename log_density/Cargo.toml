@@ -1,0 +1,11 @@
+[package]
+name = "log_density"
+version = "0.1.0"
+edition = "2021"
+
+# See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
+
+[dependencies]
+nannou = "0.18"
+rand_distr = "0.4"
+interaction = { path="../interaction"}
