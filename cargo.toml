@@ -1,15 +1,13 @@
 [workspace]
 members = [
-    "tutorials/learn-wgpu",
-    "fluid/cpu_v1",
+    "interaction",
     "d20220204",
-    "boids",
     "video_capture",
-    "schotter5"
+    "schotter5",
+    "log_density"
 ]
 
 exclude = [
-    "interaction",
     "template",
     "nature_of_code/vectors",
     "nature_of_code/force",
@@ -18,14 +16,12 @@ exclude = [
     "generative_design/p1",
     "d20220130",
     "d20220201",
-    "template",
-    "tutorials/schotter1",
-    "tutorials/schotter2",
-    "tutorials/schotter3",
-    "tutorials/schotter4",
-    "tutorials/universe",
+    "tutorials",
     "d20220119",
     "d20220121",
+    "boids",
+    "fluid",
+    "video_capture"
 ]
 
 resolver= "2"
