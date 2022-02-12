@@ -135,7 +135,7 @@ impl Gravel {
             noise: Perlin::new(),
             min_loop: 50,
             loop_length,
-            smooth_factor: 0.001,
+            smooth_factor: 0.01,
             t: 0,
         }
     }
