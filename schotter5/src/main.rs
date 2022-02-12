@@ -65,10 +65,10 @@ fn key_pressed(app: &App, model: &mut Model, key: Key) {
 }
 
 struct StoneNoise {
-    x: NoiseLoop<f32>,
-    y: NoiseLoop<f32>,
-    rot: NoiseLoop<f32>,
-    motion: NoiseLoop<f32>,
+    x: NoiseLoop,
+    y: NoiseLoop,
+    rot: NoiseLoop,
+    motion: NoiseLoop,
 }
 
 struct Stone {
@@ -81,20 +81,24 @@ struct Stone {
 }
 
 impl Stone {
-    fn new(x: f32, y: f32, diameter: f64) -> Self {
-        let noise = StoneNoise {
-            x: NoiseLoop::new(diameter, -0.5, 0.5),
-            y: NoiseLoop::new(diameter, -0.5, 0.5),
-            rot: NoiseLoop::new(diameter, -PI / 2.0, PI / 2.0),
-            motion: NoiseLoop::new(diameter, 0.0, 1.0),
+    fn new(x: f32, y: f32, diameter: f64, noise: Perlin) -> Self {
+        let mut stone_noise = StoneNoise {
+            x: NoiseLoop::new(diameter, -0.5, 0.5, 0.0),
+            y: NoiseLoop::new(diameter, -0.5, 0.5, 0.0),
+            rot: NoiseLoop::new(diameter, -PI / 2.0, PI / 2.0, 0.0),
+            motion: NoiseLoop::new(diameter, 0.0, 1.0, 0.5),
         };
+        stone_noise.x.init(noise);
+        stone_noise.y.init(noise);
+        stone_noise.rot.init(noise);
+        stone_noise.motion.init(noise);
         Stone {
             x,
             y,
             x_offset: 0.0,
             y_offset: 0.0,
             rotation: 0.0,
-            noise,
+            noise: stone_noise,
         }
     }
 }
@@ -156,20 +160,22 @@ fn model(app: &App) -> Model {
     let ui_window_ref = app.window(ui_window).unwrap();
     let ui = Egui::from_window(&ui_window_ref);
 
-    let disp_adj = 1.0;
-    let rot_adj = 1.0;
+    let disp_adj = 0.1;
+    let rot_adj = 0.1;
 
-    let period_length = 50.0;
+    let period_length = 5.0;
+    let noise = Perlin::new();
+
     let mut gravel = Vec::new();
     for y in 0..ROWS {
         for x in 0..COLS {
-            let stone = Stone::new(x as f32, y as f32, period_length);
+            let stone = Stone::new(x as f32, y as f32, period_length, noise);
             gravel.push(stone);
         }
     }
 
-    let motion = 0.5;
-    let time_factor = 0.01;
+    let motion = 1.0;
+    let time_factor = 0.001;
     let frames_dir = app
         .assets_path()
         .expect("Expected project path")
@@ -180,7 +186,6 @@ fn model(app: &App) -> Model {
     let recording = false;
     let cur_frame = 0;
 
-    let noise = Perlin::new();
     Model {
         ui,
         main_window,
@@ -196,32 +201,34 @@ fn model(app: &App) -> Model {
     }
 }
 
-struct NoiseLoop<T>
-where
-    T: NumCast + Copy,
-{
+struct NoiseLoop {
     diameter: f64,
-    min: T,
-    max: T,
-    seed: (f64, f64),
+    min: f32,
+    max: f32,
+    seed: f64,
+    start: f32,
 }
 
-impl<T: NumCast + Copy> NoiseLoop<T> {
-    fn new(diameter: f64, min: T, max: T) -> Self {
-        let seed = (1000.0 * random::<f64>(), 1000.0 * random::<f64>());
+impl NoiseLoop {
+    fn new(diameter: f64, min: f32, max: f32, start: f32) -> Self {
+        let seed = 1000.0 * random::<f64>();
         NoiseLoop {
             diameter,
             min,
             max,
             seed,
+            start,
         }
     }
+    fn init(&mut self, noise: Perlin) {
+        self.start = self.value(self.start, noise);
+    }
 
-    fn value(&self, a: f32, noise: Perlin) -> T {
-        let x = map_range(a.cos(), -1.0, 1.0, self.seed.0, self.seed.0 + self.diameter);
-        let y = map_range(a.sin(), -1.0, 1.0, self.seed.1, self.seed.1 + self.diameter);
-        let r = noise.get([x, y, 0.0]);
-        map_range(r, 0.0, 1.0, self.min, self.max)
+    fn value(&self, a: f32, noise: Perlin) -> f32 {
+        let x = map_range(a.cos(), -1.0, 1.0, 0.0, self.diameter);
+        let y = map_range(a.sin(), -1.0, 1.0, 0.0, self.diameter);
+        let r = noise.get([x, y, self.seed]);
+        self.start - map_range(r, 0.0, 1.0, self.min, self.max)
     }
 }
 
