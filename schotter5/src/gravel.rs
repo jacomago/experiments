@@ -52,6 +52,7 @@ struct Stone {
     rotation: f32,
     stone_noise: StoneNoise,
     cycles: f32,
+    t: f32,
 }
 
 impl Stone {
@@ -69,6 +70,7 @@ impl Stone {
             rotation: 0.0,
             stone_noise,
             cycles: 0.0,
+            t: 0.0,
         }
     }
 
@@ -78,10 +80,10 @@ impl Stone {
         self.stone_noise.rot.init(noise, self.cycles);
     }
 
-    fn update(&mut self, t: f32, noise: Perlin, disp_factor: f32, rot_factor: f32) {
-        self.x_offset = disp_factor * self.stone_noise.x.value(t, noise, self.cycles);
-        self.y_offset = disp_factor * self.stone_noise.y.value(t, noise, self.cycles);
-        self.rotation = rot_factor * self.stone_noise.rot.value(t, noise, self.cycles);
+    fn update(&mut self, noise: Perlin, disp_factor: f32, rot_factor: f32) {
+        self.x_offset = disp_factor * self.stone_noise.x.value(self.t, noise, self.cycles);
+        self.y_offset = disp_factor * self.stone_noise.y.value(self.t, noise, self.cycles);
+        self.rotation = rot_factor * self.stone_noise.rot.value(self.t, noise, self.cycles);
     }
 
     fn draw(&self, draw: &Draw) {
@@ -140,18 +142,21 @@ impl Gravel {
 
     pub fn update(&mut self) {
         let t_mod = self.t;
-        let smooth_t = t_mod as f32 * self.smooth_factor;
         for stone in &mut self.stones {
-            if t_mod - self.min_loop > 0 && random_f32() > self.motion {
-                stone.cycles = self.smooth_factor * random_range(self.min_loop, t_mod) as f32;
-                stone.init_noise(self.noise);
+            if stone.cycles == 0.0 {
+                if t_mod - self.min_loop > 0 && random_f32() > self.motion {
+                    stone.cycles = self.smooth_factor * random_range(self.min_loop, t_mod) as f32;
+                    stone.t = stone.cycles;
+                    stone.init_noise(self.noise);
 
-                stone.update(smooth_t, self.noise, 0.0, 0.0);
+                    stone.update(self.noise, 0.0, 0.0);
+                }
             } else {
                 let factor = position_factor(stone.x, stone.y, self.rows, self.cols);
                 let disp_factor = factor * self.disp_adj;
                 let rot_factor = factor * self.rot_adj;
-                stone.update(smooth_t, self.noise, disp_factor, rot_factor);
+                stone.update(self.noise, disp_factor, rot_factor);
+                stone.t -= self.smooth_factor;
             }
         }
         self.t += 1 % self.loop_length;
