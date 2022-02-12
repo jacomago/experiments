@@ -1,4 +1,5 @@
-use log_density::renderer::LinearRenderer;
+use log_density::lerp_colors;
+use log_density::renderer::Renderer;
 use nannou::noise::{NoiseFn, Perlin};
 use nannou::prelude::*;
 use nannou::rand::prelude::ThreadRng;
@@ -10,7 +11,7 @@ fn main() {
 }
 
 struct Blob {
-    renderer: LinearRenderer,
+    renderer: Renderer,
     rng: ThreadRng,
     noise: Perlin,
 }
@@ -21,14 +22,19 @@ fn gen_point(
     noise: Perlin,
     perlin_factor: f64,
     scale: f32,
-) -> Vec2 {
+    colors: &Vec<Srgba>,
+) -> (Vec2, Srgba) {
     let xy = vec2(rng.sample(StandardNormal), rng.sample(StandardNormal));
     let r = noise_scale * xy.length();
-    let nxy = r * vec2(
+    let t = vec2(
         (noise.get([xy.x as f64, xy.y as f64]) - 0.5) as f32,
         (noise.get([(xy.y - 1.1) as f64, (xy.x + 1.1) as f64, perlin_factor]) - 0.5) as f32,
     );
-    vec2(400.0, 400.0) + scale * xy + nxy
+    let nxy = r * t;
+    (
+        vec2(400.0, 400.0) + scale * xy + nxy,
+        lerp_colors(colors, t.length()),
+    )
 }
 
 struct Model {
@@ -38,11 +44,12 @@ struct Model {
     scale: f32,
     perlin_factor: f64,
     noise_scale: f32,
+    colors: Vec<Srgba>,
 }
 
 impl Blob {
     fn new(w: usize, h: usize, rng: ThreadRng, noise: Perlin) -> Self {
-        let renderer = LinearRenderer::new(w, h);
+        let renderer = Renderer::new(w, h);
         Blob {
             renderer,
             rng,
@@ -50,15 +57,24 @@ impl Blob {
         }
     }
 
-    fn gen(&mut self, rate: usize, noise_scale: f32, perlin_factor: f64, scale: f32) {
+    fn gen(
+        &mut self,
+        rate: usize,
+        noise_scale: f32,
+        perlin_factor: f64,
+        scale: f32,
+        colors: &Vec<Srgba>,
+    ) {
         (0..rate).for_each(|_i| {
-            self.renderer.add(gen_point(
+            let (point, color) = gen_point(
                 noise_scale,
                 &mut self.rng,
                 self.noise,
                 perlin_factor,
                 scale,
-            ))
+                colors,
+            );
+            self.renderer.add(point, color)
         });
     }
 }
@@ -73,6 +89,7 @@ fn key_pressed(app: &App, model: &mut Model, key: Key) {
                 model.noise_scale,
                 model.perlin_factor,
                 model.scale,
+                &model.colors,
             );
         }
         _other_key => {}
@@ -99,6 +116,12 @@ fn model(app: &App) -> Model {
     let perlin_factor = 0.4;
     let noise_scale = 50.0;
 
+    let colors = vec![
+        srgba(0.76, 0.66, 0.9, 1.0),
+        srgba(0.5, 0.0, 0.7, 1.0),
+        srgba(0.0, 0.0, 0.5, 1.0),
+    ];
+
     let wrect = app.window_rect();
 
     let window = app.main_window();
@@ -109,9 +132,8 @@ fn model(app: &App) -> Model {
         .build(window.device());
 
     let mut blob = Blob::new(wrect.w() as usize, wrect.h() as usize, rng, noise);
-    blob.gen(rate, noise_scale, perlin_factor, scale);
-    blob.renderer
-        .render(srgba(0.1, 0.0, 0.0, 1.0), srgba(1.0, 1.0, 1.0, 1.0), 2.0);
+    blob.gen(rate, noise_scale, perlin_factor, scale, &colors);
+    blob.renderer.render(srgba(0.1, 0.0, 0.0, 1.0), 2.0);
 
     Model {
         blob,
@@ -120,6 +142,7 @@ fn model(app: &App) -> Model {
         scale,
         perlin_factor,
         noise_scale,
+        colors,
     }
 }
 
