@@ -1,5 +1,5 @@
 use log_density::lerp_colors;
-use log_density::renderer::Renderer;
+use log_density::renderer::{Renderer, ColorSettings};
 use nannou::noise::{NoiseFn, Perlin};
 use nannou::prelude::*;
 use nannou::rand::prelude::ThreadRng;
@@ -22,7 +22,7 @@ fn gen_point(
     noise: Perlin,
     perlin_factor: f64,
     scale: f32,
-    colors: &Vec<Srgba>,
+    colors: &[Srgba],
 ) -> (Vec2, Srgba) {
     let xy = vec2(rng.sample(StandardNormal), rng.sample(StandardNormal));
     let r = noise_scale * xy.length();
@@ -32,7 +32,7 @@ fn gen_point(
     );
     let nxy = r * t;
     (
-        vec2(400.0, 400.0) + scale * xy + nxy,
+        vec2(500.0, 500.0) + scale * xy + nxy,
         lerp_colors(colors, t.length()),
     )
 }
@@ -63,7 +63,7 @@ impl Blob {
         noise_scale: f32,
         perlin_factor: f64,
         scale: f32,
-        colors: &Vec<Srgba>,
+        colors: &[Srgba],
     ) {
         (0..rate).for_each(|_i| {
             let (point, color) = gen_point(
@@ -112,7 +112,7 @@ fn model(app: &App) -> Model {
     let noise = Perlin::new();
 
     let rate = 1000000;
-    let scale = 100.0;
+    let scale = 200.0;
     let perlin_factor = 0.4;
     let noise_scale = 50.0;
 
@@ -133,7 +133,8 @@ fn model(app: &App) -> Model {
 
     let mut blob = Blob::new(wrect.w() as usize, wrect.h() as usize, rng, noise);
     blob.gen(rate, noise_scale, perlin_factor, scale, &colors);
-    blob.renderer.render(srgba(0.1, 0.0, 0.0, 1.0), 2.0);
+    let color_settings = ColorSettings::new(2.0, 1.0, None, None, None, None);
+    blob.renderer.render(srgba(0.1, 0.0, 0.0, 1.0), color_settings);
 
     Model {
         blob,

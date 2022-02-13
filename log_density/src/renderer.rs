@@ -3,17 +3,17 @@ use nannou::{
     prelude::*,
 };
 
-use crate::{lerp_colors_duo, color_u8};
+use crate::{color_u8, lerp_colors_duo};
 
 #[derive(Copy, Clone)]
-struct Color {
+struct BasicColor {
     red: f32,
     green: f32,
     blue: f32,
     alpha: u32,
 }
 
-const ZERO: Color = Color {
+const ZERO: BasicColor = BasicColor {
     red: 0.0,
     green: 0.0,
     blue: 0.0,
@@ -21,13 +21,65 @@ const ZERO: Color = Color {
 };
 
 pub struct Renderer {
-    hits: Vec<Vec<Color>>,
+    hits: Vec<Vec<BasicColor>>,
     w: usize,
     h: usize,
     img: RgbaImage,
 }
 
+pub struct ColorSettings {
+    gamma: f32,
+    cgamma: f32,
+    color_mix: Option<f32>,
+    brightness: Option<f32>,
+    contrast: Option<f32>,
+    saturation: Option<f32>,
+}
 
+impl ColorSettings {
+    pub fn new(
+        gamma: f32,
+        cgamma: f32,
+        color_mix: Option<f32>,
+        brightness: Option<f32>,
+        contrast: Option<f32>,
+        saturation: Option<f32>,
+    ) -> Self {
+        ColorSettings {
+            gamma,
+            cgamma,
+            color_mix,
+            brightness,
+            contrast,
+            saturation,
+        }
+    }
+}
+
+fn pixel_calc(
+    x: u32,
+    y: u32,
+    col: BasicColor,
+    mx: f32,
+    color_settings: &ColorSettings,
+    back: Srgba,
+) -> image::Rgba<u8> {
+     if col.alpha > 0 {
+        let hits = col.alpha as f32;
+        let alpha = ((hits + 1.0).ln() / mx).pow(color_settings.gamma);
+        let fore = srgba(
+            col.red / hits,
+            col.green / hits,
+            col.blue / hits,
+            1.0,
+        );
+        let new_c = lerp_colors_duo(back, fore, alpha);
+        image::Rgba(color_u8(new_c))
+    } else {
+        image::Rgba(color_u8(back))
+    }
+
+}
 
 impl Renderer {
     pub fn new(w: usize, h: usize) -> Self {
@@ -47,7 +99,7 @@ impl Renderer {
         }
     }
 
-    pub fn render(&mut self, back: Srgba, gamma: f32) {
+    pub fn render(&mut self, back: Srgba, color_settings: ColorSettings) {
         let mx = self
             .hits
             .iter()
@@ -56,21 +108,10 @@ impl Renderer {
             .unwrap()
             .unwrap() as f32;
         let mx = (mx + 1.0).ln();
-        for (x, row) in self.hits.iter().enumerate() {
-            for (y, col) in row.iter().enumerate() {
-                let pixel = if col.alpha > 0 {
-                    let hits = col.alpha as f32;
-                    let alpha = ((hits + 1.0).ln() / mx).pow(gamma);
-                    let fore = srgba(col.red / hits, col.green / hits, col.blue / hits, 1.0);
-                    let new_c = lerp_colors_duo(back, fore, alpha);
-                    image::Rgba(color_u8(new_c))
-                } else {
-                    image::Rgba(color_u8(back))
-                };
 
-                self.img.put_pixel(x as u32, y as u32, pixel);
-            }
-        }
+        self.img = image::ImageBuffer::from_fn(self.w.try_into().unwrap(), self.h.try_into().unwrap(), |x, y| {
+            pixel_calc(x, y, self.hits[x as usize][y as usize],mx, &color_settings, back)
+        });
     }
     pub fn img(&self) -> &RgbaImage {
         &self.img

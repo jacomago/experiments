@@ -1,7 +1,4 @@
-use nannou::{
-    color::Gradient,
-    prelude::*,
-};
+use nannou::{color::Gradient, prelude::*};
 
 pub mod renderer;
 
@@ -10,7 +7,7 @@ pub fn lerp_colors_duo(back: Srgba, fore: Srgba, alpha: f32) -> Srgba {
     Srgba::from_linear(grad.get(alpha))
 }
 
-pub fn lerp_colors(colors: &Vec<Srgba>, alpha: f32) -> Srgba {
+pub fn lerp_colors(colors: &[Srgba], alpha: f32) -> Srgba {
     let grad = Gradient::new(colors.iter().map(|c| c.into_linear()));
     Srgba::from_linear(grad.get(alpha))
 }
