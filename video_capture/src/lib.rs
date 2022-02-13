@@ -1,12 +1,10 @@
 use std::{fs::File, thread};
 
-use gifski::{Collector, CatResult, Settings, progress::ProgressBar, Writer};
+use gifski::{progress::ProgressBar, CatResult, Collector, Settings, Writer};
 use imgref::ImgVec;
 use rgb::RGBA8;
 
-
 pub type BinResult<T, E = Box<dyn std::error::Error + Send + Sync>> = Result<T, E>;
-
 
 fn collect(
     frames: Vec<ImgVec<RGBA8>>,
@@ -21,8 +19,7 @@ fn collect(
     Ok(())
 }
 
-pub fn write(writer: Writer, output_path: &str, total: u64 ) -> BinResult<()>{
-
+pub fn write(writer: Writer, output_path: &str, total: u64) -> BinResult<()> {
     let mut progress = ProgressBar::new(total);
     let file = File::create(output_path)
         .map_err(|e| println!("Can't write to {}: {}", output_path, e))
@@ -32,7 +29,10 @@ pub fn write(writer: Writer, output_path: &str, total: u64 ) -> BinResult<()>{
 }
 
 pub fn images_to_gif(
-    frames: Vec<ImgVec<RGBA8>>, frames_per_sec: f64, output_path: &str) -> BinResult<()> {
+    frames: Vec<ImgVec<RGBA8>>,
+    frames_per_sec: f64,
+    output_path: &str,
+) -> BinResult<()> {
     let (mut collector, writer) = gifski::new(Settings::default()).unwrap();
 
     let total = frames.len() as u64;

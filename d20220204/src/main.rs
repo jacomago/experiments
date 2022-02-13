@@ -104,7 +104,7 @@ struct Settings {
     min_sides: usize,
     max_sides: usize,
     step: f32,
-    layer: u64
+    layer: u64,
 }
 struct Model {
     things: Vec<Thing>,
@@ -156,7 +156,7 @@ fn model(app: &App) -> Model {
         min_sides: 3,
         max_sides: 7,
         step,
-        layer: 10
+        layer: 10,
     };
 
     let things = new_things(

@@ -129,7 +129,7 @@ fn update(app: &App, model: &mut Model, _update: Update) {
     model.gravel.update();
     if model.recording {
         model.cur_frame += 1;
-        if model.cur_frame > 2*model.period_length {
+        if model.cur_frame > 2 * model.period_length {
             model.recording = false;
         } else {
             let filename = model

@@ -46,8 +46,6 @@ fn collect(
     Ok(())
 }
 
-
-
 fn folder_gif(path: &str, frames_per_sec: f64, output_path: &str) -> BinResult<()> {
     let (mut collector, writer) = gifski::new(Settings::default()).unwrap();
 

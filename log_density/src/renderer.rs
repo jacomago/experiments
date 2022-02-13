@@ -26,7 +26,7 @@ pub struct Renderer {
     h: usize,
     img: RgbaImage,
 }
-
+#[derive(Debug)]
 pub struct ColorSettings {
     gamma: f32,
     color_mix: Option<(f32, f32)>,
@@ -139,7 +139,7 @@ impl Renderer {
         }
     }
 
-    pub fn render(&mut self, back: Srgba, color_settings: ColorSettings) {
+    pub fn render(&mut self, back: Srgba, color_settings: &ColorSettings) {
         // max hits
         let mx = self
             .hits
@@ -156,7 +156,7 @@ impl Renderer {
         self.img = image::ImageBuffer::from_fn(
             self.w.try_into().unwrap(),
             self.h.try_into().unwrap(),
-            |x, y| pixel_calc(self.hits[x as usize][y as usize], mx, &color_settings, back),
+            |x, y| pixel_calc(self.hits[x as usize][y as usize], mx, color_settings, back),
         );
     }
 
