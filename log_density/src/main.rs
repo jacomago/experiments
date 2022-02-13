@@ -1,5 +1,5 @@
 use log_density::lerp_colors;
-use log_density::renderer::{Renderer, ColorSettings};
+use log_density::renderer::{ColorSettings, Renderer};
 use nannou::noise::{NoiseFn, Perlin};
 use nannou::prelude::*;
 use nannou::rand::prelude::ThreadRng;
@@ -133,8 +133,10 @@ fn model(app: &App) -> Model {
 
     let mut blob = Blob::new(wrect.w() as usize, wrect.h() as usize, rng, noise);
     blob.gen(rate, noise_scale, perlin_factor, scale, &colors);
-    let color_settings = ColorSettings::new(2.0, 1.0, None, None, None, None);
-    blob.renderer.render(srgba(0.1, 0.0, 0.0, 1.0), color_settings);
+
+    let color_settings = ColorSettings::new(2.0, Some((0.5, 1.5)), Some((1.2, 1.2)), Some(2.0));
+    blob.renderer
+        .render(srgba(0.1, 0.0, 0.0, 1.0), color_settings);
 
     Model {
         blob,
