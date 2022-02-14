@@ -4,7 +4,8 @@ members = [
     "d20220204",
     "video_capture",
     "schotter5",
-    "log_density"
+    "log_density",
+    "cube_flow"
 ]
 
 exclude = [
