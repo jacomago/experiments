@@ -1,12 +1,9 @@
 use std::fs::File;
 
-use log_density::lerp_colors;
 use log_density::renderer::{ColorSettings, Renderer};
+use log_density::{basic_color, lerp_colors, BasicColor};
 use nannou::noise::{NoiseFn, Perlin};
 use nannou::prelude::*;
-use nannou::rand::prelude::ThreadRng;
-use nannou::rand::{thread_rng, Rng};
-use rand_distr::StandardNormal;
 use std::io::Write;
 
 fn main() {
@@ -15,7 +12,6 @@ fn main() {
 
 struct Blob {
     renderer: Renderer,
-    rng: ThreadRng,
     noise: Perlin,
 }
 #[derive(Debug)]
@@ -27,12 +23,11 @@ struct PointParam {
 }
 
 fn gen_point(
-    rng: &mut ThreadRng,
+    xy: Vec2,
     noise: Perlin,
     point_param: &PointParam,
     colors: &[Srgba],
-) -> (Vec2, Srgba) {
-    let xy = vec2(rng.sample(StandardNormal), rng.sample(StandardNormal));
+) -> (Vec2, BasicColor) {
     let r = point_param.noise_scale * xy.length();
     let t = vec2(
         (noise.get([xy.x as f64, xy.y as f64, point_param.noise_pos.x.into()]) - 0.5) as f32,
@@ -45,14 +40,13 @@ fn gen_point(
     let nxy = r * t;
     (
         point_param.zero_point + point_param.scale * xy + nxy,
-        lerp_colors(colors, t.length()),
+        basic_color(lerp_colors(colors, t.length())),
     )
 }
 
 #[derive(Debug)]
 struct Settings {
     color_settings: ColorSettings,
-    rate: usize,
     point_param: PointParam,
     colors: Vec<Srgba>,
 }
@@ -63,19 +57,25 @@ struct Model {
 }
 
 impl Blob {
-    fn new(w: usize, h: usize, rng: ThreadRng, noise: Perlin) -> Self {
+    fn new(w: usize, h: usize, noise: Perlin) -> Self {
         let renderer = Renderer::new(w, h);
-        Blob {
-            renderer,
-            rng,
-            noise,
-        }
+        Blob { renderer, noise }
     }
 
-    fn gen(&mut self, rate: usize, point_param: &PointParam, colors: &[Srgba]) {
-        (0..rate).for_each(|_i| {
-            let (point, color) = gen_point(&mut self.rng, self.noise, point_param, colors);
-            self.renderer.add(point, color)
+    fn gen(&mut self, point_param: &PointParam, colors: &[Srgba]) {
+        let size = self.renderer.w.min(self.renderer.h) as i32;
+        (-size..size).for_each(|x| {
+            (-size..size).for_each(|y| {
+                let xy = vec2(
+                    2.0 * (x as f32 / size as f32),
+                    2.0 * (y as f32 / size as f32),
+                );
+                if xy.length() < size as f32 / 2.0 {
+                    let (point, color) = gen_point(xy, self.noise, point_param, colors);
+                    let expectation =  (-xy.length().pow(2.0) / 2.0).exp();
+                    self.renderer.add(point, color * expectation);
+                }
+            })
         });
     }
 }
@@ -88,22 +88,21 @@ fn key_pressed(app: &App, model: &mut Model, key: Key) {
                 .expect("Expected project path")
                 .join("images")
                 .join(app.exe_name().unwrap());
-            app.main_window().capture_frame(path
-                .join(format!("{:03}", app.elapsed_frames()))
-                .with_extension("png"));
-            let mut file = File::create(path
-                    .join(format!("{:03}", app.elapsed_frames()))
+            app.main_window().capture_frame(
+                path.join(format!("{:03}", app.elapsed_frames()))
+                    .with_extension("png"),
+            );
+            let mut file = File::create(
+                path.join(format!("{:03}", app.elapsed_frames()))
                     .with_extension("txt"),
             )
             .unwrap();
             writeln!(&mut file, "{:?}", model.settings).unwrap();
         }
         Key::G => {
-            model.blob.gen(
-                model.settings.rate,
-                &model.settings.point_param,
-                &model.settings.colors,
-            );
+            model
+                .blob
+                .gen(&model.settings.point_param, &model.settings.colors);
         }
         _other_key => {}
     }
@@ -121,10 +120,8 @@ fn model(app: &App) -> Model {
         .build()
         .unwrap();
 
-    let rng = thread_rng();
     let noise = Perlin::new();
 
-    let rate = 90000000;
     let point_param = PointParam {
         scale: SIZE as f32 / 6.0,
         noise_scale: 75.0,
@@ -147,8 +144,8 @@ fn model(app: &App) -> Model {
         .usage(wgpu::TextureUsages::COPY_DST | wgpu::TextureUsages::TEXTURE_BINDING)
         .build(window.device());
 
-    let mut blob = Blob::new(wrect.w() as usize, wrect.h() as usize, rng, noise);
-    blob.gen(rate, &point_param, &colors);
+    let mut blob = Blob::new(wrect.w() as usize, wrect.h() as usize, noise);
+    blob.gen(&point_param, &colors);
 
     let color_settings = ColorSettings::new(2.0, Some((0.5, 1.5)), Some((1.2, 1.2)), Some(2.0));
     blob.renderer
@@ -158,7 +155,6 @@ fn model(app: &App) -> Model {
         blob,
         texture,
         settings: Settings {
-            rate,
             color_settings,
             point_param,
             colors,

@@ -3,27 +3,12 @@ use nannou::{
     prelude::*,
 };
 
-use crate::{color_u8, lerp_colors_duo};
-
-#[derive(Copy, Clone)]
-struct BasicColor {
-    red: f32,
-    green: f32,
-    blue: f32,
-    alpha: u32,
-}
-
-const ZERO: BasicColor = BasicColor {
-    red: 0.0,
-    green: 0.0,
-    blue: 0.0,
-    alpha: 0,
-};
+use crate::{color_u8, lerp_colors_duo, BasicColor, ZERO};
 
 pub struct Renderer {
     hits: Vec<Vec<BasicColor>>,
-    w: usize,
-    h: usize,
+    pub w: usize,
+    pub h: usize,
     img: RgbaImage,
 }
 #[derive(Debug)]
@@ -90,7 +75,7 @@ fn pixel_calc(
     color_settings: &ColorSettings,
     back: Srgba,
 ) -> image::Rgba<u8> {
-    let mut calc_color = if col.alpha > 0 {
+    let mut calc_color = if col.alpha > 0.0 {
         // convert hits to float
         let hits = col.alpha as f32;
 
@@ -128,29 +113,27 @@ impl Renderer {
         Renderer { hits, w, h, img }
     }
 
-    pub fn add(&mut self, xy: Vec2, color: Srgba) {
+    pub fn add(&mut self, xy: Vec2, color: BasicColor) {
         let xint = xy.x.floor() as i32;
         let yint = xy.y.floor() as i32;
         if xint >= 0 && xint < self.w as i32 && yint >= 0 && yint < self.h as i32 {
-            self.hits[yint as usize][xint as usize].alpha += 1;
-            self.hits[yint as usize][xint as usize].red += color.red;
-            self.hits[yint as usize][xint as usize].green += color.green;
-            self.hits[yint as usize][xint as usize].blue += color.blue;
+            self.hits[yint as usize][xint as usize] += color;
         }
     }
 
     pub fn render(&mut self, back: Srgba, color_settings: &ColorSettings) {
         // max hits
-        let mx = self
-            .hits
-            .iter()
-            .map(|v| v.iter().map(|x| x.alpha).max())
-            .max()
-            .unwrap()
-            .unwrap() as f32;
+        let mut max = 0.0;
+        for row in &self.hits {
+            for col in row {
+                if col.alpha > max {
+                    max = col.alpha;
+                }
+            }
+        }
 
         // log scale
-        let mx = (mx + 1.0).ln();
+        let mx = (max + 1.0).ln();
 
         // create image from hits
         self.img = image::ImageBuffer::from_fn(
