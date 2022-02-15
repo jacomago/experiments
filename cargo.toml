@@ -5,24 +5,11 @@ members = [
     "video_capture",
     "schotter5",
     "log_density",
-    "cube_flow"
+    "cube_flow",
+    "tutorials/learn-wgpu"
 ]
 
 exclude = [
-    "template",
-    "nature_of_code/vectors",
-    "nature_of_code/force",
-    "nature_of_code/intro",
-    "nature_of_code/ecosystem_project",
-    "generative_design/p1",
-    "d20220130",
-    "d20220201",
-    "tutorials",
-    "d20220119",
-    "d20220121",
-    "boids",
-    "fluid",
-    "video_capture"
 ]
 
 resolver= "2"
