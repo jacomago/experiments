@@ -2,7 +2,16 @@ use std::ops::{AddAssign, Mul};
 
 use nannou::{color::Gradient, prelude::*};
 
+pub mod blob;
 pub mod renderer;
+
+#[derive(Debug)]
+pub struct PointParam {
+    pub zero_point: Vec2,
+    pub noise_pos: Vec2,
+    pub noise_scale: f32,
+    pub scale: f32,
+}
 
 #[derive(Copy, Clone, Debug)]
 pub struct BasicColor {

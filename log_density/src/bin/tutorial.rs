@@ -1,25 +1,14 @@
 use std::fs::File;
 
-use log_density::renderer::{ColorSettings, Renderer};
-use log_density::{basic_color, lerp_colors, BasicColor};
+use log_density::blob::Blob;
+use log_density::renderer::ColorSettings;
+use log_density::{basic_color, lerp_colors, BasicColor, PointParam};
 use nannou::noise::{NoiseFn, Perlin};
 use nannou::prelude::*;
 use std::io::Write;
 
 fn main() {
     nannou::app(model).run();
-}
-
-struct Blob {
-    renderer: Renderer,
-    noise: Perlin,
-}
-#[derive(Debug)]
-struct PointParam {
-    zero_point: Vec2,
-    noise_pos: Vec2,
-    noise_scale: f32,
-    scale: f32,
 }
 
 fn gen_point(
@@ -43,41 +32,20 @@ fn gen_point(
         basic_color(lerp_colors(colors, t.length())),
     )
 }
-
+fn expectation(xy: Vec2) -> f32 {
+    (-xy.length().pow(2.0) / 2.0).exp()
+}
 #[derive(Debug)]
 struct Settings {
     color_settings: ColorSettings,
     point_param: PointParam,
     colors: Vec<Srgba>,
 }
+
 struct Model {
     blob: Blob,
     texture: wgpu::Texture,
     settings: Settings,
-}
-
-impl Blob {
-    fn new(w: usize, h: usize, noise: Perlin) -> Self {
-        let renderer = Renderer::new(w, h);
-        Blob { renderer, noise }
-    }
-
-    fn gen(&mut self, point_param: &PointParam, colors: &[Srgba]) {
-        let size = self.renderer.w.min(self.renderer.h) as i32;
-        (-size..size).for_each(|x| {
-            (-size..size).for_each(|y| {
-                let xy = vec2(
-                    2.0 * (x as f32 / size as f32),
-                    2.0 * (y as f32 / size as f32),
-                );
-                if xy.length() < size as f32 / 2.0 {
-                    let (point, color) = gen_point(xy, self.noise, point_param, colors);
-                    let expectation =  (-xy.length().pow(2.0) / 2.0).exp();
-                    self.renderer.add(point, color * expectation);
-                }
-            })
-        });
-    }
 }
 
 fn key_pressed(app: &App, model: &mut Model, key: Key) {
@@ -100,9 +68,12 @@ fn key_pressed(app: &App, model: &mut Model, key: Key) {
             writeln!(&mut file, "{:?}", model.settings).unwrap();
         }
         Key::G => {
-            model
-                .blob
-                .gen(&model.settings.point_param, &model.settings.colors);
+            model.blob.gen(
+                &model.settings.point_param,
+                &model.settings.colors,
+                gen_point,
+                expectation,
+            );
         }
         _other_key => {}
     }
@@ -145,7 +116,7 @@ fn model(app: &App) -> Model {
         .build(window.device());
 
     let mut blob = Blob::new(wrect.w() as usize, wrect.h() as usize, noise);
-    blob.gen(&point_param, &colors);
+    blob.gen(&point_param, &colors, gen_point, expectation);
 
     let color_settings = ColorSettings::new(2.0, Some((0.5, 1.5)), Some((1.2, 1.2)), Some(2.0));
     blob.renderer
