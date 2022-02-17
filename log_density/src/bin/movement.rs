@@ -64,16 +64,18 @@ fn key_pressed(app: &App, model: &mut Model, key: Key) {
     match key {
         Key::S => {
             let path = save_path(app);
-            app.main_window().capture_frame(
-                path.join(format!("{:03}", app.elapsed_frames()))
-                    .with_extension("png"),
-            );
-            let mut file = File::create(
-                path.join(format!("{:03}", app.elapsed_frames()))
-                    .with_extension("txt"),
-            )
-            .unwrap();
-            writeln!(&mut file, "{:?}", model.settings).unwrap();
+            if let Some(window) = app.window(model.main_window) {
+                window.capture_frame(
+                    path.join(format!("{:03}", app.elapsed_frames()))
+                        .with_extension("png"),
+                );
+                let mut file = File::create(
+                    path.join(format!("{:03}", app.elapsed_frames()))
+                        .with_extension("txt"),
+                )
+                .unwrap();
+                writeln!(&mut file, "{:?}", model.settings).unwrap();
+            }
         }
         _other_key => {}
     }
@@ -122,8 +124,8 @@ fn model(app: &App) -> Model {
     };
 
     let colors = vec![
-        hsva(0.8, 0.96, 1.0, 1.0).into(),
-        hsva(0.6, 0.7, 1.0, 1.0).into(),
+        hsva(0.4, 0.5, 1.0, 1.0).into(),
+        hsva(0.3, 0.7, 1.0, 1.0).into(),
         hsva(0.23, 0.6, 1.0, 1.0).into(),
     ];
 
@@ -140,7 +142,7 @@ fn model(app: &App) -> Model {
 
     let color_settings = ColorSettings::new(2.0, Some((0.5, 1.5)), Some((1.5, 1.2)), Some(2.0));
 
-    let back_color = hsv(0.1, 0.1, 0.1).into();
+    let back_color = hsv(0.01, 0.1, 0.01).into();
     Model {
         main_window,
         egui,
@@ -229,11 +231,10 @@ fn update(app: &App, model: &mut Model, update: Update) {
 }
 
 fn view(app: &App, model: &Model, frame: Frame) {
-    frame.clear(BLACK);
-
     let draw = app.draw();
-
     if model.updated {
+        frame.clear(BLACK);
+
         let flat_samples = model.blob.renderer.img().as_flat_samples();
         model.texture.upload_data(
             app.main_window().device(),
