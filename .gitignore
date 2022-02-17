@@ -1,3 +1,5 @@
 /target
 Cargo.lock
 assets/images/gif/output
+assets/images/output
+assets/archive

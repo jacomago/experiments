@@ -1,1 +1,0 @@
-ffmpeg -start_number 3565 -i %04d.png -c:v libvpx-vp9 -r 24 boids3.webm

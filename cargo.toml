@@ -1,12 +1,12 @@
 [workspace]
 members = [
-    "interaction",
-    "d20220204",
-    "video_capture",
-    "schotter5",
-    "log_density",
-    "cube_flow",
-    "tutorials/learn-wgpu"
+    "areas/interaction",
+    "projects/video_capture",
+    "areas/schotter5",
+    "projects/log_density",
+    "projects/cube_flow",
+    "resources/learn-wgpu",
+    "sketches/d20220201"
 ]
 
 exclude = [

@@ -1,0 +1,1 @@
+Following https://generateme.wordpress.com/2018/10/24/smooth-rendering-log-density-mapping/
