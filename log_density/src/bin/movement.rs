@@ -4,7 +4,7 @@ use interaction::save_path;
 use log_density::blob::Blob;
 use log_density::renderer::ColorSettings;
 use log_density::{basic_color, lerp_colors, BasicColor, PointParam};
-use nannou::color::Pixel;
+
 use nannou::noise::Perlin;
 use nannou::prelude::*;
 use nannou_egui::egui::Ui;
@@ -21,13 +21,17 @@ fn main() {
 
 fn gen_point(
     xy: Vec2,
-    noise: Perlin,
+    _noise: Perlin,
     point_param: &PointParam,
     colors: &[Srgba],
 ) -> (Vec2, BasicColor) {
     let r = point_param.noise_scale * xy.length();
     let psi = r * xy.angle();
-    let t = xy.x * vec2(psi.cos() + psi.sin(), psi.cos() - psi.sin());
+    let t = xy.x
+        * vec2(
+            (psi + point_param.noise_pos.x).cos() + (psi + point_param.noise_pos.x).sin(),
+            (psi + point_param.noise_pos.y).cos() - (psi + point_param.noise_pos.y).sin(),
+        );
     let nxy = r * t;
     (
         point_param.zero_point + point_param.scale * xy + nxy,
@@ -44,7 +48,7 @@ pub struct Settings {
     color_settings: ColorSettings,
     point_param: PointParam,
     colors: Vec<Srgba>,
-    back_color: Hsv,
+    back_color: Srgba,
 }
 
 struct Model {
@@ -53,6 +57,7 @@ struct Model {
     blob: Blob,
     texture: wgpu::Texture,
     settings: Settings,
+    updated: bool,
 }
 
 fn key_pressed(app: &App, model: &mut Model, key: Key) {
@@ -135,7 +140,7 @@ fn model(app: &App) -> Model {
 
     let color_settings = ColorSettings::new(2.0, Some((0.5, 1.5)), Some((1.5, 1.2)), Some(2.0));
 
-    let back_color = hsv(0.1, 0.1, 0.1);
+    let back_color = hsv(0.1, 0.1, 0.1).into();
     Model {
         main_window,
         egui,
@@ -147,13 +152,15 @@ fn model(app: &App) -> Model {
             colors,
             back_color,
         },
+        updated: false,
     }
 }
 
-pub fn edit_color(ui: &mut egui::Ui, color: &mut Srgba) {
+pub fn edit_color(ui: &mut egui::Ui, color: &mut Srgba) -> bool {
     let egui_srgba =
         egui::color::Rgba::from_rgba_premultiplied(color.red, color.green, color.blue, color.alpha);
     let mut egui_color32: egui::color::Color32 = egui_srgba.into();
+    let mut changed = false;
     if egui::color_picker::color_edit_button_srgba(
         ui,
         &mut egui_color32,
@@ -168,47 +175,35 @@ pub fn edit_color(ui: &mut egui::Ui, color: &mut Srgba) {
             egui_srgba.b(),
             egui_srgba.a(),
         );
+        changed = true
     }
+    changed
 }
 
-pub fn egui_update(ui: &mut Ui, settings: &mut Settings) {
+fn egui_update(ui: &mut Ui, settings: &mut Settings) -> bool {
     ui.add(egui::Label::new("rendered movement"));
-
-    nannou_egui::edit_color(ui, &mut settings.back_color);
-
-    ui.horizontal(|ui| {
-        ui.label("noise xy");
-        ui.add(egui::DragValue::new(&mut settings.point_param.noise_pos.x).speed(0.1))
-            .changed();
-        ui.add(egui::DragValue::new(&mut settings.point_param.noise_pos.y).speed(0.1))
-            .changed();
-    });
-    ui.horizontal(|ui| {
-        ui.label("zero_point xy");
-        ui.add(egui::DragValue::new(&mut settings.point_param.zero_point.x).speed(0.1))
-            .changed();
-        ui.add(egui::DragValue::new(&mut settings.point_param.zero_point.y).speed(0.1))
-            .changed();
-    });
-    ui.add(egui::Slider::new(&mut settings.point_param.scale, 100.0..=SIZE as f32).text("scale"))
-        .changed();
-    ui.add(egui::Slider::new(&mut settings.point_param.noise_scale, 10.0..=200.0).text("scale"))
-        .changed();
+    let mut changed = false;
+    changed = changed || edit_color(ui, &mut settings.back_color);
+    changed = changed || settings.color_settings.ui_update(ui);
+    changed = changed || settings.point_param.ui_update(ui);
 
     for c in &mut settings.colors {
-        edit_color(ui, c);
+        changed = changed || edit_color(ui, c);
     }
+    changed
 }
 
-fn update_ui(egui: &mut Egui, settings: &mut Settings) {
+fn update_ui(egui: &mut Egui, settings: &mut Settings) -> bool {
     let ctx = egui.begin_frame();
+    let mut changed = false;
     egui::Window::new("Workshop window").show(&ctx, |ui| {
         //vels
-        egui_update(ui, settings);
+        changed = egui_update(ui, settings);
     });
+    changed
 }
 
-fn update(_app: &App, model: &mut Model, update: Update) {
+fn update(app: &App, model: &mut Model, update: Update) {
     let Model {
         ref mut egui,
         ref mut settings,
@@ -217,31 +212,37 @@ fn update(_app: &App, model: &mut Model, update: Update) {
     } = *model;
 
     egui.set_elapsed_time(update.since_start);
-    update_ui(egui, settings);
-
-    blob.gen(
-        &settings.point_param,
-        &settings.colors,
-        gen_point,
-        expectation,
-    );
-    blob.renderer
-        .render(settings.back_color.into(), &settings.color_settings);
+    let changed = update_ui(egui, settings);
+    if changed || app.elapsed_frames() == 0 {
+        blob.gen(
+            &settings.point_param,
+            &settings.colors,
+            gen_point,
+            expectation,
+        );
+        blob.renderer
+            .render(settings.back_color, &settings.color_settings);
+        model.updated = true;
+    } else {
+        model.updated = false;
+    }
 }
 
 fn view(app: &App, model: &Model, frame: Frame) {
     frame.clear(BLACK);
 
-    let flat_samples = model.blob.renderer.img().as_flat_samples();
-    model.texture.upload_data(
-        app.main_window().device(),
-        &mut *frame.command_encoder(),
-        flat_samples.as_slice(),
-    );
-
     let draw = app.draw();
 
-    draw.texture(&model.texture);
+    if model.updated {
+        let flat_samples = model.blob.renderer.img().as_flat_samples();
+        model.texture.upload_data(
+            app.main_window().device(),
+            &mut *frame.command_encoder(),
+            flat_samples.as_slice(),
+        );
+
+        draw.texture(&model.texture);
+    }
 
     draw.to_frame(app, &frame).unwrap();
 }

@@ -1,4 +1,5 @@
 {
   "rust-analyzer.checkOnSave.command": "clippy",
-  "rust-analyzer.runnables.cargoExtraArgs": ["--release"]
+  "rust-analyzer.runnables.cargoExtraArgs": ["--release"],
+  "files.autoSave": "afterDelay"
 }

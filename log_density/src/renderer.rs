@@ -2,6 +2,7 @@ use nannou::{
     image::{self, RgbaImage},
     prelude::*,
 };
+use nannou_egui::egui::{self, Ui};
 
 use crate::{color_u8, lerp_colors_duo, BasicColor, ZERO};
 
@@ -11,11 +12,40 @@ pub struct Renderer {
     pub h: usize,
     img: RgbaImage,
 }
+
+#[derive(Debug)]
+pub struct BrightnessContrast {
+    brightness: f32,
+    contrast: f32,
+}
+
+impl From<(f32, f32)> for BrightnessContrast {
+    fn from(value: (f32, f32)) -> Self {
+        BrightnessContrast {
+            brightness: value.0,
+            contrast: value.1,
+        }
+    }
+}
+#[derive(Debug)]
+pub struct ColorMix {
+    fore: f32,
+    back: f32,
+}
+impl From<(f32, f32)> for ColorMix {
+    fn from(value: (f32, f32)) -> Self {
+        ColorMix {
+            fore: value.0,
+            back: value.1,
+        }
+    }
+}
+
 #[derive(Debug)]
 pub struct ColorSettings {
     gamma: f32,
-    color_mix: Option<(f32, f32)>,
-    brightness_contrast: Option<(f32, f32)>,
+    color_mix: Option<ColorMix>,
+    brightness_contrast: Option<BrightnessContrast>,
     saturation: Option<f32>,
 }
 
@@ -26,6 +56,8 @@ impl ColorSettings {
         brightness_contrast: Option<(f32, f32)>,
         saturation: Option<f32>,
     ) -> Self {
+        let brightness_contrast = brightness_contrast.map(BrightnessContrast::from);
+        let color_mix = color_mix.map(ColorMix::from);
         ColorSettings {
             gamma,
             color_mix,
@@ -33,23 +65,62 @@ impl ColorSettings {
             saturation,
         }
     }
+
+    pub fn ui_update(&mut self, ui: &mut Ui) -> bool {
+        let mut changed = false;
+
+        egui::CollapsingHeader::new("Color Settings").show(ui, |ui| {
+            changed = changed
+                || ui
+                    .add(egui::Slider::new(&mut self.gamma, 0.0..=4.0).text("gamma"))
+                    .changed();
+            match &mut self.brightness_contrast {
+                Some(value) => {
+                    changed = changed
+                        || ui
+                            .add(
+                                egui::Slider::new(&mut value.brightness, 0.0..=4.0)
+                                    .text("brightness"),
+                            )
+                            .changed();
+                    changed = changed
+                        || ui
+                            .add(egui::Slider::new(&mut value.contrast, 0.0..=4.0).text("contrast"))
+                            .changed();
+                }
+                None => {
+                    if ui
+                        .add(egui::Checkbox::new(&mut false, "brightness contrast"))
+                        .changed()
+                    {
+                        self.brightness_contrast = Some(BrightnessContrast {
+                            brightness: 1.0,
+                            contrast: 1.0,
+                        });
+                        changed = true;
+                    }
+                }
+            };
+        });
+        changed
+    }
 }
 
-fn mix_colors(fore: Srgba, color_mix: (f32, f32)) -> Srgba {
+fn mix_colors(fore: Srgba, color_mix: &ColorMix) -> Srgba {
     let gamma_correct = srgba(
-        fore.red.pow(color_mix.1),
-        fore.green.pow(color_mix.1),
-        fore.blue.pow(color_mix.1),
+        fore.red.pow(color_mix.back),
+        fore.green.pow(color_mix.back),
+        fore.blue.pow(color_mix.back),
         1.0,
     );
-    lerp_colors_duo(fore, gamma_correct, color_mix.0)
+    lerp_colors_duo(fore, gamma_correct, color_mix.fore)
 }
 
-fn lut_f32(c_value: f32, amount: (f32, f32)) -> f32 {
-    ((c_value * amount.0 - 0.5) * amount.1 + 0.5).clamp(0.0, 1.0)
+fn lut_f32(c_value: f32, amount: &BrightnessContrast) -> f32 {
+    ((c_value * amount.brightness - 0.5) * amount.contrast + 0.5).clamp(0.0, 1.0)
 }
 
-fn lut(c: Srgba, amount: (f32, f32)) -> Srgba {
+fn lut(c: Srgba, amount: &BrightnessContrast) -> Srgba {
     srgba(
         lut_f32(c.red, amount),
         lut_f32(c.green, amount),
@@ -86,7 +157,7 @@ fn pixel_calc(
         let fore = srgba(col.red / hits, col.green / hits, col.blue / hits, 1.0);
 
         // linear interpolate colors
-        if let Some(color_mix) = color_settings.color_mix {
+        if let Some(color_mix) = &color_settings.color_mix {
             lerp_colors_duo(back, mix_colors(fore, color_mix), alpha)
         } else {
             lerp_colors_duo(back, fore, alpha)
@@ -95,7 +166,7 @@ fn pixel_calc(
         back
     };
 
-    if let Some(bc) = color_settings.brightness_contrast {
+    if let Some(bc) = &color_settings.brightness_contrast {
         calc_color = lut(calc_color, bc)
     };
 

@@ -1,6 +1,9 @@
 use std::ops::{AddAssign, Mul};
 
 use nannou::{color::Gradient, prelude::*};
+use nannou_egui::egui;
+
+use nannou_egui::egui::Ui;
 
 pub mod blob;
 pub mod renderer;
@@ -13,6 +16,44 @@ pub struct PointParam {
     pub scale: f32,
 }
 
+impl PointParam {
+    pub fn ui_update(&mut self, ui: &mut Ui) -> bool {
+        let mut changed = false;
+        egui::CollapsingHeader::new("Point Param").show(ui, |ui| {
+            ui.horizontal(|ui| {
+                ui.label("noise xy");
+                changed = changed
+                    || ui
+                        .add(egui::DragValue::new(&mut self.noise_pos.x).speed(0.1))
+                        .changed();
+                changed = changed
+                    || ui
+                        .add(egui::DragValue::new(&mut self.noise_pos.y).speed(0.1))
+                        .changed();
+            });
+            ui.horizontal(|ui| {
+                ui.label("zero_point xy");
+                changed = changed
+                    || ui
+                        .add(egui::DragValue::new(&mut self.zero_point.x).speed(0.1))
+                        .changed();
+                changed = changed
+                    || ui
+                        .add(egui::DragValue::new(&mut self.zero_point.y).speed(0.1))
+                        .changed();
+            });
+            changed = changed
+                || ui
+                    .add(egui::Slider::new(&mut self.scale, 100.0..=1000.0_f32).text("scale"))
+                    .changed();
+            changed = changed
+                || ui
+                    .add(egui::Slider::new(&mut self.noise_scale, 10.0..=200.0).text("noise scale"))
+                    .changed();
+        });
+        changed
+    }
+}
 #[derive(Copy, Clone, Debug)]
 pub struct BasicColor {
     red: f32,
