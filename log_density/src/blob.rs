@@ -1,7 +1,7 @@
 use nannou::{
     color::Srgba,
     noise::Perlin,
-    prelude::{vec2, Vec2, Pow},
+    prelude::{vec2, Vec2},
 };
 
 use crate::{renderer::Renderer, BasicColor, PointParam};
