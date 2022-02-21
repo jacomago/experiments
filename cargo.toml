@@ -1,11 +1,11 @@
 [workspace]
 members = [
-    "areas/interaction",
-    "projects/video_capture",
-    "areas/schotter5",
+    "lib/interaction",
+    "lib/video_capture",
+    "sketches/schotter5",
     "projects/log_density",
     "projects/cube_flow",
-    "resources/learn-wgpu",
+    "learning/learn-wgpu",
     "sketches/d20220201"
 ]
 

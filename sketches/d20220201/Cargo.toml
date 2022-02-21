@@ -8,4 +8,4 @@ edition = "2021"
 [dependencies]
 nannou = "0.18"
 voronator = "0.2"
-interaction = { path="../../areas/interaction"}
+interaction = { path="../../lib/interaction"}
