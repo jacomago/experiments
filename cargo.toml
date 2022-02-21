@@ -2,14 +2,20 @@
 members = [
     "lib/interaction",
     "lib/video_capture",
+    "lib/template",
+
     "sketches/schotter5",
+    "sketches/d20220201",
+    "sketches/prime-spiral",
+
     "projects/log_density",
     "projects/cube_flow",
+
     "learning/learn-wgpu",
-    "sketches/d20220201"
 ]
 
 exclude = [
+    "assets"
 ]
 
 resolver= "2"
