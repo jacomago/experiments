@@ -4,7 +4,6 @@ use sorted_vec::SortedSet;
 fn main() {
     nannou::app(model)
         .update(update)
-        .loop_mode(LoopMode::wait())
         .run();
 }
 
@@ -65,6 +64,9 @@ fn model(app: &App) -> Model {
 }
 
 fn prime(n: u64, primes: &mut SortedSet<u64>) {
+    if n == 1 {
+        return;
+    }
     for p in primes.iter() {
         if *p as f64 > (n as f64).sqrt() {
             break;
@@ -79,7 +81,7 @@ fn update(_app: &App, model: &mut Model, _update: Update) {
     let n = model.n;
     prime(n + 1, &mut model.primes);
     if n >= 1 && n < model.max.pow(2) {
-        model.ppos = model.pos.clone();
+        model.ppos = model.pos;
         model.pos += model.step_size * model.directions[model.direction];
         if n % model.steps == 0 {
             model.turns += 1;
@@ -105,16 +107,11 @@ fn view(app: &App, model: &Model, frame: Frame) {
         return;
     }
 
-    if model.primes.contains(&n) {
-        draw.ellipse()
-            .radius(3.0)
-            .xy(model.pos)
-            .no_fill()
-            .stroke_weight(0.2)
-            .stroke_color(BLACK);
-    }
-
     draw.line().points(model.ppos, model.pos).color(WHITE);
+
+    if model.primes.contains(&n) {
+        draw.ellipse().radius(3.0).xy(model.pos).color(BLACK);
+    }
 
     draw.to_frame(app, &frame).unwrap();
 }
