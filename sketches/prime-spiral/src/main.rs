@@ -1,4 +1,4 @@
-use nannou::{prelude::*, color::IntoLinSrgba};
+use nannou::prelude::*;
 use sorted_vec::SortedSet;
 
 fn main() {
@@ -12,7 +12,7 @@ struct Spiral {
     steps: u64,
     turns: u64,
     direction: usize,
-    color:  Hsla
+    color: Hsla,
 }
 
 impl Spiral {
@@ -27,14 +27,14 @@ impl Spiral {
             })
             .collect();
         Self {
-            step_size: size as f32 / (max as f32 + 1.0),
+            step_size: 2.0 * recip * size as f32 / (max as f32),
             directions,
             pos: Vec2::ZERO,
             ppos: Vec2::ZERO,
             turns: 1,
             steps: 1,
             direction: 0,
-            color
+            color,
         }
     }
 
@@ -50,7 +50,7 @@ impl Spiral {
         }
     }
 
-    fn draw(&self, draw: &Draw, n: u64, prime: bool) {
+    fn draw(&self, draw: &Draw, prime: bool) {
         draw.line().points(self.ppos, self.pos).color(self.color);
         if prime {
             draw.ellipse().radius(3.0).xy(self.pos).color(self.color);
@@ -62,12 +62,12 @@ struct Model {
     field_up: f32,
     field_left: f32,
     primes: SortedSet<u64>,
-    spiral: Spiral,
+    spirals: Vec<Spiral>,
     max: u64,
     n: u64,
 }
 
-const SIZE: usize = 500;
+const SIZE: usize = 1024;
 
 fn key_pressed(app: &App, model: &mut Model, key: Key) {
     interaction::key_pressed(app, &mut model.field_up, &mut model.field_left, key);
@@ -83,20 +83,22 @@ fn model(app: &App) -> Model {
         .build()
         .unwrap();
 
-    let directions = vec![
-        vec2(1.0, 0.0),
-        vec2(0.0, 1.0),
-        vec2(-1.0, 0.0),
-        vec2(0.0, -1.0),
-    ];
-
     let max = 100;
     let n = 0;
     Model {
         primes: SortedSet::from(vec![2, 3, 5, 7, 11, 13, 17, 19]),
         field_up: 120.0,
         field_left: 1.0,
-        spiral: Spiral::new(4, SIZE, max, WHITE.into()),
+        spirals: (3..12)
+            .map(|i| {
+                Spiral::new(
+                    i,
+                    SIZE,
+                    max,
+                    hsla(map_range(i, 3, 12, 0.1, 0.8), 1.0, 0.5, 0.8),
+                )
+            })
+            .collect(),
         max,
         n,
     }
@@ -120,7 +122,9 @@ fn update(_app: &App, model: &mut Model, _update: Update) {
     let n = model.n;
     prime(n + 1, &mut model.primes);
     if n >= 1 && n < model.max.pow(2) {
-        model.spiral.update(n);
+        for spiral in model.spirals.iter_mut() {
+            spiral.update(n);
+        }
     }
     model.n += 1;
 }
@@ -139,7 +143,9 @@ fn view(app: &App, model: &Model, frame: Frame) {
     }
 
     let prime = model.primes.contains(&n);
-    model.spiral.draw(&draw, n, prime);
+    for spiral in &model.spirals {
+        spiral.draw(&draw, prime);
+    }
 
     draw.to_frame(app, &frame).unwrap();
 }

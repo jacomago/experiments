@@ -18,6 +18,10 @@ My creative coding mostly using [Nannou](https://nannou.cc)
 
 ## Sketches
 
+- prime spirals
+
+  ![prime spirals](sketches/prime-spiral/18624.png)
+
 - d20220204
 
   ![d20220204](sketches/d20220204/243.png)
