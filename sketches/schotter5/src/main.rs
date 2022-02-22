@@ -12,10 +12,7 @@ const WIDTH: u32 = COLS * SIZE + 2 * MARGIN;
 const HEIGHT: u32 = ROWS * SIZE + 2 * MARGIN;
 
 fn main() {
-    nannou::app(model)
-        .update(update)
-        .loop_mode(LoopMode::wait())
-        .run();
+    nannou::app(model).update(update).run();
 }
 
 fn key_pressed(app: &App, model: &mut Model, key: Key) {
@@ -108,9 +105,9 @@ fn model(app: &App) -> Model {
         .expect("Expected project path")
         .join("images")
         .join("gif")
-        .join("output")
+        .join("output3")
         .join(app.exe_name().unwrap());
-    let recording = false;
+    let recording = true;
     let cur_frame = 0;
 
     Model {
@@ -124,22 +121,15 @@ fn model(app: &App) -> Model {
     }
 }
 
-fn update(app: &App, model: &mut Model, _update: Update) {
+fn update(_app: &App, model: &mut Model, _update: Update) {
     update_ui(model);
     model.gravel.update();
     if model.recording {
         model.cur_frame += 1;
-        if model.cur_frame > 2 * model.period_length {
+        if model.cur_frame == 3 * model.period_length + 1 {
             model.recording = false;
-        } else {
-            let filename = model
-                .frames_dir
-                .join(format!("schotter{:>04}", model.cur_frame))
-                .with_extension("png");
-
-            if let Some(window) = app.window(model.main_window) {
-                window.capture_frame(filename);
-            }
+            model.frames_dir = model.frames_dir.join(format!("{}", random_ascii()));
+            model.cur_frame = 0;
         }
     }
 }
@@ -154,4 +144,15 @@ fn view(app: &App, model: &Model, frame: Frame) {
     draw.background().color(PLUM);
     model.gravel.draw(&gdraw);
     draw.to_frame(app, &frame).unwrap();
+
+    if model.recording {
+        let filename = model
+            .frames_dir
+            .join(format!("schotter{:>04}", model.cur_frame))
+            .with_extension("png");
+
+        if let Some(window) = app.window(model.main_window) {
+            window.capture_frame(filename);
+        }
+    }
 }

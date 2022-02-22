@@ -1,6 +1,6 @@
 use std::{
     fs::{self, File},
-    path::PathBuf,
+    path::{PathBuf},
     thread,
 };
 
@@ -12,9 +12,9 @@ use video_capture::BinResult;
 
 fn main() {
     folder_gif(
-        "./assets/images/gif/output/schotter4_frames",
-        24.0,
-        "schotter4.gif",
+        "./assets/images/gif/output3/schotter5",
+        50.0,
+        "schotter_perlin_smooth1.gif",
     )
     .expect("expected a folder of images");
 }

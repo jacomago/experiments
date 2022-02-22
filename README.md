@@ -28,7 +28,7 @@ My creative coding mostly using [Nannou](https://nannou.cc)
 
 - schotter5
 
-  ![schotter5](sketches/schotter5/schotter5.gif)
+  ![schotter5](sketches/schotter5/schotter_perlin_smooth1.gif)
 
 - d20220130
 
