@@ -3,6 +3,7 @@ members = [
     "lib/interaction",
     "lib/video_capture",
     "lib/template",
+    "lib/zeroes",
 
     "sketches/schotter5",
     "sketches/d20220201",
