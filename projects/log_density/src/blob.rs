@@ -6,7 +6,6 @@ use nannou::{
 
 use crate::{renderer::Renderer, BasicColor, PointParam};
 
-
 pub type GenPointFn = fn(Vec2, Perlin, &PointParam, &[Srgba]) -> (Vec2, BasicColor);
 pub type ExpectationFn = fn(Vec2) -> f32;
 
@@ -16,7 +15,13 @@ impl Blob {
         Blob { renderer, noise }
     }
 
-    pub fn gen(&mut self, point_param: &PointParam, colors: &[Srgba], gen_point: GenPointFn, expectation: ExpectationFn) {
+    pub fn gen(
+        &mut self,
+        point_param: &PointParam,
+        colors: &[Srgba],
+        gen_point: GenPointFn,
+        expectation: ExpectationFn,
+    ) {
         let size = self.renderer.w.min(self.renderer.h) as i32;
         (-size..size).for_each(|x| {
             (-size..size).for_each(|y| {

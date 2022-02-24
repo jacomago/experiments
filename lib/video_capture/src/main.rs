@@ -1,6 +1,6 @@
 use std::{
     fs::{self, File},
-    path::{PathBuf},
+    path::PathBuf,
     thread,
 };
 

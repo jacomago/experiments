@@ -3,7 +3,7 @@ use std::fs::File;
 use log_density::blob::Blob;
 use log_density::renderer::ColorSettings;
 use log_density::{basic_color, lerp_colors, BasicColor, PointParam};
-use nannou::noise::{ Perlin};
+use nannou::noise::Perlin;
 use nannou::prelude::*;
 use std::io::Write;
 

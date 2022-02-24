@@ -12,7 +12,7 @@ fn main() {
 
 struct Thing {
     pos: Vec2,
-    color: Hsl
+    color: Hsl,
 }
 
 struct Model {
@@ -55,7 +55,7 @@ impl Thing {
     fn new() -> Self {
         Thing {
             pos: SIZE as f32 * vec2(random::<f32>() - 0.5, random::<f32>() - 0.5),
-            color: hsl(random::<f32>(), 0.5, 0.6)
+            color: hsl(random::<f32>(), 0.5, 0.6),
         }
     }
 
@@ -75,7 +75,6 @@ fn view(app: &App, model: &Model, frame: Frame) {
         .collect();
     let diagram = CentroidDiagram::<Point>::from_tuple(&points).unwrap();
     for cell in diagram.cells {
-        
         draw.polygon()
             .points(cell.points().iter().map(|x| (x.x as f32, x.y as f32)))
             .hsl(random::<f32>(), 0.5, 0.6);
