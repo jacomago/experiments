@@ -8,6 +8,7 @@ members = [
     "sketches/schotter5",
     "sketches/d20220201",
     "sketches/prime-spiral",
+    "sketches/nbodychoreo",
 
     "projects/log_density",
     "projects/cube_flow",
