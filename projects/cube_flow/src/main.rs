@@ -1,5 +1,5 @@
 use nannou::prelude::*;
-use std::{path::PathBuf};
+use std::path::PathBuf;
 
 fn main() {
     nannou::app(model).update(update).run();
@@ -30,7 +30,7 @@ fn model(app: &App) -> Model {
         .join("gif")
         .join("output")
         .join(app.exe_name().unwrap());
-    let recording = true;
+    let recording = false;
     let cur_frame = 0;
 
     let period_length = 50;
@@ -63,6 +63,8 @@ fn view(app: &App, model: &Model, frame: Frame) {
 
     let w = rect.w() * 0.09;
     let margin = rect.w() * 0.01;
+    let x_pos = rect.left() + (w + margin) * 10.5;
+    let max_d = vec3(x_pos, 0.0, x_pos).length_squared();
     let tris = (0..10)
         .flat_map(|j| {
             (0..10).flat_map(move |i| {
@@ -71,7 +73,9 @@ fn view(app: &App, model: &Model, frame: Frame) {
                     0.0,
                     rect.left() + (w + margin) * (j as f32 + 0.5),
                 );
-                let size = vec3(w, 20.0 + 50.0 * ((TAU * t + (i + j) as f32 * 0.1).sin()), w);
+                let d = map_range(centre.length_squared(), 0.0, max_d, -PI, PI);
+                let height = 200.0 + 100.0 * ((-TAU * t + d).sin());
+                let size = vec3(w, height, w);
                 geom::Cuboid::from_xyz_whd(centre, size)
                     .faces_iter()
                     .enumerate()
