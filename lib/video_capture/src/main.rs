@@ -12,9 +12,9 @@ use video_capture::BinResult;
 
 fn main() {
     folder_gif(
-        "./assets/images/gif/output3/schotter5",
-        50.0,
-        "schotter_perlin_smooth1.gif",
+        "./assets/images/gif/output/cube_flow",
+        25.0,
+        "cube_flow1.gif",
     )
     .expect("expected a folder of images");
 }

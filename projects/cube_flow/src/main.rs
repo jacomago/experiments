@@ -1,13 +1,63 @@
 use nannou::prelude::*;
+use std::{path::PathBuf};
 
 fn main() {
-    nannou::sketch(view).run()
+    nannou::app(model).update(update).run();
 }
 
-fn view(app: &App, frame: Frame) {
+struct Model {
+    main_window: WindowId,
+    frames_dir: PathBuf,
+    cur_frame: u32,
+    recording: bool,
+    period_length: u32,
+}
+
+const SIZE: u32 = 1200;
+fn model(app: &App) -> Model {
+    let main_window = app
+        .new_window()
+        .title(app.exe_name().unwrap())
+        .size(SIZE, SIZE)
+        .view(view)
+        .build()
+        .unwrap();
+
+    let frames_dir = app
+        .assets_path()
+        .expect("Expected project path")
+        .join("images")
+        .join("gif")
+        .join("output")
+        .join(app.exe_name().unwrap());
+    let recording = true;
+    let cur_frame = 0;
+
+    let period_length = 50;
+    Model {
+        main_window,
+        frames_dir,
+        cur_frame,
+        recording,
+        period_length,
+    }
+}
+
+fn update(_app: &App, model: &mut Model, _update: Update) {
+    if model.recording {
+        model.cur_frame += 1;
+        if model.cur_frame == 3 * model.period_length + 1 {
+            model.recording = false;
+            model.frames_dir = model.frames_dir.join(format!("{}", random_ascii()));
+            model.cur_frame = 0;
+        }
+    }
+}
+
+fn view(app: &App, model: &Model, frame: Frame) {
     frame.clear(DIMGRAY);
     let draw = app.draw();
-    let t = app.elapsed_frames() as f32 * 0.1;
+    let t = app.elapsed_frames() as f32 * 0.02;
     let rect = app.window_rect();
     draw.background().color(PLUM);
 
@@ -21,11 +71,7 @@ fn view(app: &App, frame: Frame) {
                     0.0,
                     rect.left() + (w + margin) * (j as f32 + 0.5),
                 );
-                let size = vec3(
-                    w,
-                    20.0 + 50.0 * ((t + (i + j) as f32 * 0.1).sin() ),
-                    w,
-                );
+                let size = vec3(w, 20.0 + 50.0 * ((TAU * t + (i + j) as f32 * 0.1).sin()), w);
                 geom::Cuboid::from_xyz_whd(centre, size)
                     .faces_iter()
                     .enumerate()
@@ -48,5 +94,16 @@ fn view(app: &App, frame: Frame) {
         .tris_colored(tris)
         .y_radians(TAU * 0.125)
         .x_radians(TAU * 0.125);
+
+    if model.recording {
+        let filename = model
+            .frames_dir
+            .join(format!("cube_flow{:>04}", model.cur_frame))
+            .with_extension("png");
+
+        if let Some(window) = app.window(model.main_window) {
+            window.capture_frame(filename);
+        }
+    }
     draw.to_frame(app, &frame).unwrap();
 }
