@@ -16,8 +16,7 @@ struct Thing {
 }
 
 impl Thing {
-    fn update(&mut self, things: &[Thing], grav: f32, rect: &Rect, top_speed: f32) {
-        self.add_gravity(things, grav);
+    fn update(&mut self, rect: &Rect, top_speed: f32) {
         self.velocity += self.acc;
         self.pos += self.velocity;
         self.velocity = self.velocity.clamp_length_max(top_speed);
@@ -28,17 +27,10 @@ impl Thing {
         draw.ellipse().radius(self.mass).xy(self.pos).color(WHITE);
     }
 
-    fn add_gravity(&mut self, things: &[Thing], grav: f32) {
-        let mut sum_recip = Vec2::ZERO;
-        for t in things {
-            let dir = t.pos - self.pos;
-            if dir.length() <= f32::EPSILON {
-                continue;
-            }
-            let recip = self.mass * t.mass * dir.length().recip().clamp(0.0, 100.0);
-            sum_recip += dir.normalize() * recip;
-        }
-        self.acc += grav * sum_recip;
+    fn add_gravity(&mut self, thing: &Thing, grav: f32) {
+        let dir = (thing.pos - self.pos).clamp_length(5.0, 25.0);
+        let recip = self.mass * thing.mass * dir.length_squared().recip();
+        self.acc += grav * dir.normalize() * recip;
     }
 
     pub fn check_edges(&mut self, rect: &Rect) {
@@ -68,7 +60,7 @@ impl System {
             .pairs
             .iter()
             .map(|p| Thing {
-                mass: 2.0,
+                mass: p.0.x.clamp(1.0, 20.0),
                 pos: p.0,
                 velocity: p.1,
                 acc: Vec2::ZERO,
@@ -84,7 +76,12 @@ impl System {
     fn update(&mut self, rect: &Rect) {
         let copy = self.things.clone();
         for t in self.things.iter_mut() {
-            t.update(&copy, self.grav, rect, self.top_speed);
+            for thing in &copy {
+                if (thing.pos - t.pos).length_squared() > f32::EPSILON {
+                    t.add_gravity(thing, self.grav);
+                }
+            }
+            t.update(rect, self.top_speed);
         }
     }
 
@@ -138,8 +135,8 @@ fn model(app: &App) -> Model {
         .build()
         .unwrap();
 
-    let position = StartingPosition::circle(2, 6.0, 4.0);
-    let system = System::new(position, 10.0, 0.02);
+    let position = StartingPosition::circle(10, 50.0, 1.0);
+    let system = System::new(position, 10.0, 2.0);
 
     Model {
         system,
@@ -155,8 +152,13 @@ fn update(app: &App, model: &mut Model, _update: Update) {
 fn view(app: &App, model: &Model, frame: Frame) {
     let draw = app.draw();
 
-    draw.background().color(BLACK);
-    draw.scale(0.1);
+    if app.elapsed_frames() == 1 {
+        draw.background().color(BLACK);
+    }
+    draw.rect()
+        .wh(app.window_rect().wh())
+        .color(srgba(0.0, 0.0, 0.0, 0.1));
+
     model.system.draw(&draw);
 
     draw.to_frame(app, &frame).unwrap();
