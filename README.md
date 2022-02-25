@@ -18,6 +18,10 @@ My creative coding mostly using [Nannou](https://nannou.cc)
 
 ## Sketches
 
+- cube flow (Coding Challenge 86)[https://thecodingtrain.com/CodingChallenges/086-beesandbombs.html]
+
+  ![cube flow](sketches/cube_flow/cube_flow3.gif)
+
 - prime spirals
 
   ![prime spirals](sketches/prime-spiral/18624.png)

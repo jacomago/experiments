@@ -9,9 +9,9 @@ members = [
     "sketches/d20220201",
     "sketches/prime-spiral",
     "sketches/nbodychoreo",
+    "sketches/cube_flow",
 
     "projects/log_density",
-    "projects/cube_flow",
 
     "learning/learn-wgpu",
 ]
