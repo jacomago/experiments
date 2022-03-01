@@ -10,6 +10,7 @@ members = [
     "sketches/prime-spiral",
     "sketches/nbodychoreo",
     "sketches/cube_flow",
+    "sketches/tiling",
 
     "projects/log_density",
 
