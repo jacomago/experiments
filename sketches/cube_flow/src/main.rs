@@ -5,12 +5,26 @@ fn main() {
     nannou::app(model).update(update).run();
 }
 
+fn key_pressed(app: &App, model: &mut Model, key: Key) {
+    interaction::key_pressed(app, &mut model.speed, &mut model.hue, key);
+
+    match key {
+        Key::W => model.flow_direction = Direction::Z,
+        Key::A => model.flow_direction = Direction::X,
+        Key::S => model.flow_direction = Direction::FromCentre,
+        Key::D => model.flow_direction = Direction::Across,
+        _other_key => {}
+    }
+}
 struct Model {
     main_window: WindowId,
     frames_dir: PathBuf,
     cur_frame: u32,
     recording: bool,
     period_length: u32,
+    flow_direction: Direction,
+    speed: f32,
+    hue: f32,
 }
 
 const SIZE: u32 = 1200;
@@ -19,6 +33,7 @@ fn model(app: &App) -> Model {
         .new_window()
         .title(app.exe_name().unwrap())
         .size(SIZE, SIZE)
+        .key_pressed(key_pressed)
         .view(view)
         .build()
         .unwrap();
@@ -40,7 +55,17 @@ fn model(app: &App) -> Model {
         cur_frame,
         recording,
         period_length,
+        flow_direction: Direction::FromCentre,
+        speed: 0.02,
+        hue: 0.8,
     }
+}
+
+enum Direction {
+    FromCentre,
+    Across,
+    X,
+    Z,
 }
 
 fn update(_app: &App, model: &mut Model, _update: Update) {
@@ -57,7 +82,7 @@ fn update(_app: &App, model: &mut Model, _update: Update) {
 fn view(app: &App, model: &Model, frame: Frame) {
     frame.clear(DIMGRAY);
     let draw = app.draw();
-    let t = app.elapsed_frames() as f32 * 0.02;
+    let t = app.elapsed_frames() as f32 * model.speed;
     let rect = app.window_rect();
     draw.background().color(PLUM);
 
@@ -73,7 +98,14 @@ fn view(app: &App, model: &Model, frame: Frame) {
                     0.0,
                     rect.left() + (w + margin) * (j as f32 + 0.5),
                 );
-                let d = map_range(centre.length_squared(), 0.0, max_d, -PI, PI);
+                let d = match model.flow_direction {
+                    Direction::FromCentre => {
+                        map_range(centre.length_squared(), 0.0, max_d, -PI, PI)
+                    }
+                    Direction::X => map_range(centre.x, rect.left(), rect.right(), -PI, PI),
+                    Direction::Z => map_range(centre.z, rect.left(), rect.right(), -PI, PI),
+                    Direction::Across => map_range(i + j, 0, 20, -PI, PI),
+                };
                 let height = 200.0 + 100.0 * ((-TAU * t + d).sin());
                 let size = vec3(w, height, w);
                 geom::Cuboid::from_xyz_whd(centre, size)
@@ -82,7 +114,7 @@ fn view(app: &App, model: &Model, frame: Frame) {
                     .map(|f| {
                         (
                             f.1.triangles_iter(),
-                            hsl(0.8, 0.8, map_range(f.0, 0, 8, 0.2, 0.4)),
+                            hsl(model.hue, 0.8, map_range(f.0, 0, 8, 0.2, 0.4)),
                         )
                     })
                     .collect::<Vec<_>>()
