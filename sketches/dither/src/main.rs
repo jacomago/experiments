@@ -38,7 +38,7 @@ fn model(app: &App) -> Model {
         .unwrap();
 
     let image_texture = wgpu::Texture::from_path(app, &img_path).unwrap();
-    dither_image(&mut img, 4.0);
+    dither_image(&mut img, 1.0);
     let buf: image::DynamicImage = image::DynamicImage::ImageRgba8(img);
     let dith_img_text = wgpu::Texture::from_image(app, &buf);
     Model {
@@ -50,7 +50,7 @@ fn model(app: &App) -> Model {
 }
 
 fn reduce_color(i: u8, factor: f32) -> u8 {
-    ((std::u8::MAX as f32 / factor) * ((factor * i as f32) / (std::u8::MAX as f32)).floor()).floor()
+    ((std::u8::MAX as f32 / factor) * ((factor * i as f32) / (std::u8::MAX as f32)).floor()).round()
         as u8
 }
 
