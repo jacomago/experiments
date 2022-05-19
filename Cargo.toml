@@ -12,8 +12,10 @@ members = [
     "sketches/cube_flow",
     "sketches/cube_schotter",
     "sketches/tiling",
+    "sketches/dither",
 
     "projects/log_density",
+    "projects/fluid/cpu_v1",
 
     "learning/learn-wgpu",
 ]
