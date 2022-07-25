@@ -5,17 +5,12 @@ members = [
     "lib/template",
     "lib/zeroes",
 
-    "sketches/schotter5",
     "sketches/d20220201",
-    "sketches/prime-spiral",
     "sketches/nbodychoreo",
-    "sketches/cube_flow",
-    "sketches/cube_schotter",
     "sketches/tiling",
     "sketches/dither",
     "sketches/posterize",
 
-    "projects/log_density",
     "projects/fluid/cpu_v1",
 
     "learning/learn-wgpu",

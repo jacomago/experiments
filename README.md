@@ -1,16 +1,8 @@
 # Experiments
 
-My creative coding mostly using [Nannou](https://nannou.cc)
+Creative coding mostly using [Nannou](https://nannou.cc)
 
 ## Projects
-
-- A Renderer in Fractal flame style
-
-  ![current flame](projects/log_density/images/001.png)
-
-- Boids
-
-  ![boids](projects/boids/boids.gif)
 
 - Fluid Simulation
 
@@ -18,25 +10,9 @@ My creative coding mostly using [Nannou](https://nannou.cc)
 
 ## Sketches
 
-- cube schotter
-
-  ![cube schotter](sketches/cube_schotter/926.png)
-
-- cube flow (Coding Challenge 86)[https://thecodingtrain.com/CodingChallenges/086-beesandbombs.html]
-
-  ![cube flow](sketches/cube_flow/cube_flow3.gif)
-
-- prime spirals
-
-  ![prime spirals](sketches/prime-spiral/18624.png)
-
 - d20220204
 
   ![d20220204](sketches/d20220204/243.png)
-
-- schotter5
-
-  ![schotter5](sketches/schotter5/schotter_perlin_smooth1.gif)
 
 - d20220130
 
