@@ -2,6 +2,15 @@
 
 Creative coding mostly using [Nannou](https://nannou.cc)
 
+## External repos
+
+- [prime-spiral](https://github.com/jacomago/prime-spiral)
+- [cube flow](https://github.com/jacomago/cube_flow)
+- [cube schotter](https://github.com/jacomago/cube_schotter)
+- [log density](https://github.com/jacomago/log_density)
+- [schotter5](https://github.com/jacomago/schotter5)
+- [boids](https://github.com/jacomago/boids)
+
 ## Projects
 
 - Fluid Simulation
