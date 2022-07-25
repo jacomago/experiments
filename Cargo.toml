@@ -1,23 +1,22 @@
 [workspace]
 members = [
-    "lib/interaction",
-    "lib/video_capture",
-    "lib/template",
-    "lib/zeroes",
+    "lib/*",
 
-    "sketches/d20220201",
-    "sketches/nbodychoreo",
-    "sketches/tiling",
-    "sketches/dither",
-    "sketches/posterize",
+    "sketches/*",
 
     "projects/fluid/cpu_v1",
 
     "learning/learn-wgpu",
+    "learning/nature_of_code/*",
+    "learning/generative_design/*",
+    "learning/universe",
+    "learning/schotter/schotter1",
+    "learning/schotter/schotter2",
+    "learning/schotter/schotter3",
+    "learning/schotter/schotter4",
+
 ]
 
-exclude = [
-    "assets"
-]
+exclude = ["assets"]
 
-resolver= "2"
+resolver = "2"
